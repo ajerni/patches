@@ -1,0 +1,264 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
+import { Navbar } from "@/components/Navbar";
+import { Plus, Search, Music, Edit, Trash2, Boxes } from "lucide-react";
+
+interface Module {
+  id: string;
+  manufacturer: string;
+  name: string;
+  type?: string;
+  notes?: string;
+  images?: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export default function ModulesPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [modules, setModules] = useState<Module[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    }
+  }, [status, router]);
+
+  useEffect(() => {
+    if (session) {
+      fetchModules();
+    }
+  }, [session]);
+
+  const fetchModules = async () => {
+    try {
+      const res = await fetch("/api/modules");
+      if (res.ok) {
+        const data = await res.json();
+        setModules(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch modules:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this module?")) return;
+
+    try {
+      const res = await fetch(`/api/modules/${id}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        setModules(modules.filter((m) => m.id !== id));
+      }
+    } catch (error) {
+      console.error("Failed to delete module:", error);
+    }
+  };
+
+  const filteredModules = modules.filter((module) =>
+    module.manufacturer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    module.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    module.type?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Group modules by manufacturer
+  const groupedModules = filteredModules.reduce((acc, module) => {
+    const mfr = module.manufacturer;
+    if (!acc[mfr]) {
+      acc[mfr] = [];
+    }
+    acc[mfr].push(module);
+    return acc;
+  }, {} as Record<string, Module[]>);
+
+  if (status === "loading" || loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <Boxes className="h-12 w-12 text-primary-600 animate-pulse mx-auto mb-4" />
+            <p className="text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Modules</h1>
+          <p className="text-gray-600">
+            Manage your Eurorack module collection
+          </p>
+        </div>
+
+        {/* Actions Bar */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search modules..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+          <Link
+            href="/modules/new"
+            className="flex items-center space-x-2 bg-primary-600 text-white hover:bg-primary-700 px-6 py-2 rounded-lg font-medium transition"
+          >
+            <Plus className="h-5 w-5" />
+            <span>Add Module</span>
+          </Link>
+        </div>
+
+        {/* Module Count */}
+        {modules.length > 0 && (
+          <div className="mb-6 text-sm text-gray-600">
+            Total modules: <span className="font-semibold">{modules.length}</span>
+            {searchTerm && (
+              <span className="ml-2">
+                (showing {filteredModules.length})
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Modules List */}
+        {filteredModules.length === 0 ? (
+          <div className="text-center py-12">
+            <Boxes className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-xl font-medium text-gray-900 mb-2">
+              {modules.length === 0 ? "No modules yet" : "No modules found"}
+            </h3>
+            <p className="text-gray-600 mb-6">
+              {modules.length === 0
+                ? "Start building your Eurorack collection"
+                : "Try adjusting your search"}
+            </p>
+            {modules.length === 0 && (
+              <Link
+                href="/modules/new"
+                className="inline-flex items-center space-x-2 bg-primary-600 text-white hover:bg-primary-700 px-6 py-3 rounded-lg font-medium transition"
+              >
+                <Plus className="h-5 w-5" />
+                <span>Add Your First Module</span>
+              </Link>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {Object.entries(groupedModules).sort().map(([manufacturer, mods]) => (
+              <div key={manufacturer}>
+                <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                  <Boxes className="h-5 w-5 mr-2 text-primary-600" />
+                  {manufacturer}
+                  <span className="ml-2 text-sm font-normal text-gray-500">
+                    ({mods.length} {mods.length === 1 ? 'module' : 'modules'})
+                  </span>
+                </h2>
+                <div className="grid gap-4 lg:grid-cols-2">
+                  {mods.map((module) => (
+                    <div
+                      key={module.id}
+                      className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition group"
+                    >
+                      <div className="flex">
+                        {/* Module Info - Left Side */}
+                        <div className="flex-1 p-6 flex flex-col">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex-1">
+                              <Link href={`/modules/${module.id}`}>
+                                <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-primary-600 transition">
+                                  {module.name}
+                                </h3>
+                              </Link>
+                              {module.type && (
+                                <span className="inline-block px-2 py-1 bg-primary-100 text-primary-700 text-xs rounded-full">
+                                  {module.type}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {module.notes && (
+                            <p className="text-gray-600 text-sm mb-4 line-clamp-3 flex-1">
+                              {module.notes}
+                            </p>
+                          )}
+
+                          <div className="flex items-center justify-between pt-4 border-t mt-auto">
+                            <Link
+                              href={`/modules/${module.id}`}
+                              className="text-primary-600 hover:text-primary-700 font-medium text-sm"
+                            >
+                              View Details
+                            </Link>
+                            <div className="flex space-x-2">
+                              <Link
+                                href={`/modules/${module.id}/edit`}
+                                className="p-2 text-gray-600 hover:text-primary-600 transition"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Link>
+                              <button
+                                onClick={() => handleDelete(module.id)}
+                                className="p-2 text-gray-600 hover:text-red-600 transition"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Module Image - Right Side (Portrait) */}
+                        <Link href={`/modules/${module.id}`} className="flex-shrink-0">
+                          {module.images && module.images.length > 0 ? (
+                            <div className="relative w-32 h-full bg-gray-100 overflow-hidden">
+                              <Image
+                                src={module.images[0]}
+                                alt={module.name}
+                                fill
+                                className="object-cover group-hover:scale-105 transition duration-300"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-32 h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                              <Boxes className="h-12 w-12 text-gray-400" />
+                            </div>
+                          )}
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
+
+

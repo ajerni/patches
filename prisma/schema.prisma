@@ -1,0 +1,74 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  password      String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  patches       Patch[]
+  modules       Module[]
+  
+  @@map("patches_users")
+}
+
+model Patch {
+  id            String        @id @default(cuid())
+  title         String
+  description   String        @db.Text
+  instructions  String?       @db.Text
+  notes         String?       @db.Text
+  tags          String[]      @default([])
+  images        String[]      @default([])
+  sounds        String[]      @default([])
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  patchModules  PatchModule[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  @@index([userId])
+  @@map("patches_patches")
+}
+
+model Module {
+  id            String        @id @default(cuid())
+  manufacturer  String
+  name          String
+  type          String?
+  notes         String?       @db.Text
+  images        String[]      @default([])
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  patchModules  PatchModule[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  @@index([userId])
+  @@map("patches_modules")
+}
+
+model PatchModule {
+  id        String   @id @default(cuid())
+  patchId   String   @map("patch_id")
+  moduleId  String   @map("module_id")
+  patch     Patch    @relation(fields: [patchId], references: [id], onDelete: Cascade)
+  module    Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  @@unique([patchId, moduleId])
+  @@index([patchId])
+  @@index([moduleId])
+  @@map("patches_patch_modules")
+}
+
