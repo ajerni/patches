@@ -226,10 +226,10 @@ export default function PatchDetailPage({ params }: { params: { id: string } }) 
             <p className="text-sm text-gray-600 mb-4">
               Visual diagram showing the signal flow and connections in this patch.
               <span className="block mt-1">
-                <span className="inline-block w-3 h-3 bg-yellow-500 rounded-full mr-1"></span> Audio •
-                <span className="inline-block w-3 h-3 bg-gray-500 rounded-full mr-1 ml-2"></span> 1V/oct •
-                <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-1 ml-2"></span> CV •
-                <span className="inline-block w-3 h-3 bg-red-600 rounded-full mr-1 ml-2"></span> Gates/Triggers •
+                <span className="inline-block w-3 h-3 bg-yellow-500 rounded-full mr-1"></span> Audio 
+                <span className="inline-block w-3 h-3 bg-gray-500 rounded-full mr-1 ml-2"></span> 1V/oct 
+                <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-1 ml-2"></span> CV 
+                <span className="inline-block w-3 h-3 bg-red-600 rounded-full mr-1 ml-2"></span> Gates/Triggers 
                 <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-1 ml-2"></span> Clock
               </span>
             </p>

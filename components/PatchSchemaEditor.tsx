@@ -468,6 +468,18 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
               ) : (
                 <span> Click and drag on the canvas to draw cables. Choose cable type using the colored buttons above.</span>
               )}
+              <br />
+              <span>
+                Credits: Patch Symbols from PATCH &amp; TWEAK by Kim Bjørn and Chris Meyer, published by Bjooks, are licensed under{" "}
+                <a
+                  href="https://creativecommons.org/licenses/by-nd/4.0/deed.en"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline text-blue-700 hover:text-blue-900"
+                >
+                  CC BY-ND 4.0
+                </a>
+              </span>
             </div>
           </div>
         </div>

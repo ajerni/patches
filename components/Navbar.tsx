@@ -15,7 +15,7 @@ export function Navbar() {
             <Link href="/" className="flex items-center space-x-2">
               <Music className="h-8 w-8 text-primary-600" />
               <span className="text-xl font-bold text-gray-900">
-                Eurorack Patches
+                Synth Patch Library
               </span>
             </Link>
           </div>

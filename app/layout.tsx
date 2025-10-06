@@ -6,8 +6,8 @@ import { Providers } from "@/components/Providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Eurorack Patch Library",
-  description: "Document and organize your Eurorack modular synthesis patches",
+  title: "Synth Patch Library",
+  description: "Document and organize your modular synthesis patches",
 };
 
 export default function RootLayout({
