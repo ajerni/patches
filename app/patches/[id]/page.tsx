@@ -6,8 +6,15 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { HearthisEmbed } from "@/components/HearthisEmbed";
-import { Edit, ArrowLeft, Music, Calendar, Tag, Image as ImageIcon, Volume2, Boxes } from "lucide-react";
+import { Edit, ArrowLeft, Music, Calendar, Tag, Image as ImageIcon, Volume2, Boxes, Network } from "lucide-react";
 import Image from "next/image";
+import dynamic from "next/dynamic";
+
+// Dynamically import PatchSchemaViewer to avoid SSR issues
+const PatchSchemaViewer = dynamic(() => import("@/components/PatchSchemaViewer"), {
+  ssr: false,
+  loading: () => <div className="bg-gray-100 h-96 flex items-center justify-center">Loading schema...</div>
+});
 
 interface Patch {
   id: string;
@@ -18,6 +25,7 @@ interface Patch {
   tags: string[];
   images: string[];
   sounds: string[];
+  schema?: any;
   patchModules?: Array<{
     module: {
       id: string;
@@ -102,160 +110,207 @@ export default function PatchDetailPage({ params }: { params: { id: string } }) 
           <span>Back to Dashboard</span>
         </Link>
 
-        {/* Header */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="flex justify-between items-start mb-4">
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{patch.title}</h1>
-              <div className="flex items-center space-x-4 text-sm text-gray-600">
-                <div className="flex items-center space-x-1">
-                  <Calendar className="h-4 w-4" />
-                  <span>
-                    Updated {new Date(patch.updatedAt).toLocaleDateString()}
-                  </span>
+        {/* Main Content Card */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-primary-500 to-primary-600 px-8 py-6">
+            <div className="flex justify-between items-start mb-3">
+              <div className="flex-1">
+                <h1 className="text-3xl font-bold text-white mb-2">{patch.title}</h1>
+                <div className="flex items-center space-x-4 text-sm text-primary-50">
+                  <div className="flex items-center space-x-1">
+                    <Calendar className="h-4 w-4" />
+                    <span>
+                      Updated {new Date(patch.updatedAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <span>•</span>
+                  <span>by {patch.user.name}</span>
                 </div>
-                <span>•</span>
-                <span>by {patch.user.name}</span>
               </div>
+              <Link
+                href={`/patches/${patch.id}/edit`}
+                className="flex items-center space-x-2 bg-white text-primary-600 hover:bg-primary-50 px-4 py-2 rounded-lg transition font-medium"
+              >
+                <Edit className="h-4 w-4" />
+                <span>Edit</span>
+              </Link>
             </div>
-            <Link
-              href={`/patches/${patch.id}/edit`}
-              className="flex items-center space-x-2 bg-primary-600 text-white hover:bg-primary-700 px-4 py-2 rounded-lg transition"
-            >
-              <Edit className="h-4 w-4" />
-              <span>Edit</span>
-            </Link>
+
+            {/* Tags */}
+            {patch.tags.length > 0 && (
+              <div className="flex items-center space-x-2">
+                <Tag className="h-4 w-4 text-primary-100" />
+                <div className="flex flex-wrap gap-2">
+                  {patch.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="px-3 py-1 bg-white/20 text-white rounded-full text-sm backdrop-blur-sm"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Tags */}
-          {patch.tags.length > 0 && (
-            <div className="flex items-center space-x-2">
-              <Tag className="h-4 w-4 text-gray-400" />
-              <div className="flex flex-wrap gap-2">
-                {patch.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Description */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+          {/* Description */}
+          <div className="px-8 py-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Description</h2>
           <p className="text-gray-700 whitespace-pre-wrap">{patch.description}</p>
         </div>
 
-        {/* Modules Used */}
-        {patch.patchModules && patch.patchModules.length > 0 && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Boxes className="h-5 w-5" />
-              Modules Used
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {patch.patchModules.map(({ module }) => (
-                <Link
-                  key={module.id}
-                  href={`/modules/${module.id}`}
-                  className="border border-gray-200 rounded-lg p-4 hover:border-primary-500 hover:shadow-md transition group"
-                >
-                  {/* Module Image */}
-                  {module.images && module.images.length > 0 ? (
-                    <div className="relative aspect-video rounded-lg overflow-hidden mb-3 bg-gray-100">
-                      <Image
-                        src={module.images[0]}
-                        alt={module.name}
-                        fill
-                        className="object-cover group-hover:scale-105 transition duration-300"
-                      />
+          {/* Modules Used */}
+          {patch.patchModules && patch.patchModules.length > 0 && (
+            <div className="border-b border-gray-200">
+              <div className="bg-gradient-to-r from-primary-50 to-primary-100/50 px-8 py-4 border-b border-primary-200">
+              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <Boxes className="h-5 w-5 text-primary-600" />
+                Modules Used
+                <span className="ml-2 text-sm font-normal text-gray-600">
+                  ({patch.patchModules.length})
+                </span>
+              </h2>
+            </div>
+            <div className="p-6 bg-gray-50/50">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {patch.patchModules.map(({ module }) => (
+                  <Link
+                    key={module.id}
+                    href={`/modules/${module.id}`}
+                    className="bg-white border border-gray-200 rounded-lg hover:border-primary-400 hover:shadow-md transition-all duration-200 group flex overflow-hidden h-20"
+                  >
+                    {/* Module Info - Left Side */}
+                    <div className="flex-1 p-3 flex flex-col justify-center min-w-0">
+                      <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition text-sm truncate">
+                        {module.name}
+                      </h3>
+                      <p className="text-xs text-gray-600 truncate">{module.manufacturer}</p>
+                      {module.type && (
+                        <span className="inline-block px-1.5 py-0.5 bg-primary-50 text-primary-700 rounded text-[10px] w-fit mt-1 font-medium">
+                          {module.type}
+                        </span>
+                      )}
                     </div>
-                  ) : (
-                    <div className="aspect-video rounded-lg bg-gray-100 mb-3 flex items-center justify-center">
-                      <Boxes className="h-8 w-8 text-gray-400" />
-                    </div>
-                  )}
-                  
-                  {/* Module Info */}
-                  <div>
-                    <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition truncate">
-                      {module.name}
-                    </h3>
-                    <p className="text-sm text-gray-600 truncate">{module.manufacturer}</p>
-                    {module.type && (
-                      <span className="inline-block mt-2 px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
-                        {module.type}
-                      </span>
+
+                    {/* Module Image - Right Side (Portrait) */}
+                    {module.images && module.images.length > 0 ? (
+                      <div className="relative w-16 h-20 flex-shrink-0 bg-gray-100">
+                        <Image
+                          src={module.images[0]}
+                          alt={module.name}
+                          fill
+                          className="object-cover group-hover:scale-105 transition duration-300"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-16 h-20 flex-shrink-0 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                        <Boxes className="h-5 w-5 text-gray-400" />
+                      </div>
                     )}
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
-
-        {/* Instructions */}
-        {patch.instructions && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Instructions</h2>
-            <p className="text-gray-700 whitespace-pre-wrap">{patch.instructions}</p>
-          </div>
-        )}
-
-        {/* Notes */}
-        {patch.notes && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Notes</h2>
-            <p className="text-gray-700 whitespace-pre-wrap">{patch.notes}</p>
-          </div>
-        )}
-
-        {/* Images */}
-        {patch.images.length > 0 && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-            <div className="flex items-center space-x-2 mb-4">
-              <ImageIcon className="h-5 w-5 text-gray-700" />
-              <h2 className="text-xl font-semibold text-gray-900">Images</h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {patch.images.map((image, idx) => (
-                <a
-                  key={idx}
-                  href={image}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block group"
-                >
-                  <img
-                    src={image}
-                    alt={`${patch.title} - Image ${idx + 1}`}
-                    className="w-full h-64 object-cover rounded-lg group-hover:opacity-90 transition"
-                  />
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
+          )}
 
-        {/* Sounds */}
-        {patch.sounds.length > 0 && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center space-x-2 mb-4">
-              <Volume2 className="h-5 w-5 text-gray-700" />
-              <h2 className="text-xl font-semibold text-gray-900">Audio Examples</h2>
+          {/* Patch Schema */}
+          {patch.schema && (
+            <div className="px-8 py-6 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Network className="h-5 w-5" />
+              Patch Schema
+            </h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Visual diagram showing the signal flow and connections in this patch.
+              <span className="block mt-1">
+                <span className="inline-block w-3 h-3 bg-yellow-500 rounded-full mr-1"></span> Audio •
+                <span className="inline-block w-3 h-3 bg-gray-500 rounded-full mr-1 ml-2"></span> 1V/oct •
+                <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-1 ml-2"></span> CV •
+                <span className="inline-block w-3 h-3 bg-red-600 rounded-full mr-1 ml-2"></span> Gates/Triggers •
+                <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-1 ml-2"></span> Clock
+              </span>
+            </p>
+            <div className="overflow-x-auto">
+              <PatchSchemaViewer schema={patch.schema} width={1200} height={800} />
             </div>
-            <div className="space-y-4">
+            </div>
+          )}
+
+          {/* Instructions */}
+          {patch.instructions && (
+            <div className="px-8 py-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Instructions</h2>
+              <p className="text-gray-700 whitespace-pre-wrap">{patch.instructions}</p>
+            </div>
+          )}
+
+          {/* Notes */}
+          {patch.notes && (
+            <div className="px-8 py-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Notes</h2>
+              <p className="text-gray-700 whitespace-pre-wrap">{patch.notes}</p>
+            </div>
+          )}
+
+          {/* Images */}
+          {patch.images.length > 0 && (
+            <div className="border-b border-gray-200">
+              <div className="bg-gradient-to-r from-primary-50 to-primary-100/50 px-8 py-4 border-b border-primary-200">
+              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <ImageIcon className="h-5 w-5 text-primary-600" />
+                Images
+                <span className="ml-2 text-sm font-normal text-gray-600">
+                  ({patch.images.length})
+                </span>
+              </h2>
+            </div>
+            <div className="p-6 bg-gray-50/50">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {patch.images.map((image, idx) => (
+                  <a
+                    key={idx}
+                    href={image}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block group"
+                  >
+                    <img
+                      src={image}
+                      alt={`${patch.title} - Image ${idx + 1}`}
+                      className="w-full h-64 object-cover rounded-lg border-2 border-gray-200 bg-white group-hover:border-primary-400 group-hover:shadow-lg transition-all duration-200"
+                    />
+                  </a>
+                ))}
+              </div>
+            </div>
+            </div>
+          )}
+
+          {/* Sounds */}
+          {patch.sounds.length > 0 && (
+            <div>
+              <div className="bg-gradient-to-r from-primary-50 to-primary-100/50 px-8 py-4 border-b border-primary-200">
+              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <Volume2 className="h-5 w-5 text-primary-600" />
+                Audio Examples
+                <span className="ml-2 text-sm font-normal text-gray-600">
+                  ({patch.sounds.length})
+                </span>
+              </h2>
+            </div>
+            <div className="p-6 bg-gray-50/50 space-y-4">
               {patch.sounds.map((sound, idx) => (
-                <HearthisEmbed key={idx} url={sound} index={idx} />
+                <div key={idx} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <HearthisEmbed url={sound} index={idx} />
+                </div>
               ))}
             </div>
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );

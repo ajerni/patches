@@ -13,6 +13,7 @@ const patchSchema = z.object({
   images: z.array(z.string()).default([]),
   sounds: z.array(z.string()).default([]),
   moduleIds: z.array(z.string()).default([]),
+  schema: z.any().optional(),
 });
 
 // GET a single patch

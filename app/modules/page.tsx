@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Navbar } from "@/components/Navbar";
+import { Pagination } from "@/components/Pagination";
 import { Plus, Search, Music, Edit, Trash2, Boxes } from "lucide-react";
 
 interface Module {
@@ -25,6 +26,8 @@ export default function ModulesPage() {
   const [modules, setModules] = useState<Module[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(6);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -74,15 +77,26 @@ export default function ModulesPage() {
     module.type?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Group modules by manufacturer
-  const groupedModules = filteredModules.reduce((acc, module) => {
-    const mfr = module.manufacturer;
-    if (!acc[mfr]) {
-      acc[mfr] = [];
-    }
-    acc[mfr].push(module);
-    return acc;
-  }, {} as Record<string, Module[]>);
+  // Reset to page 1 when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredModules.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedModules = filteredModules.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
 
   if (status === "loading" || loading) {
     return (
@@ -167,94 +181,93 @@ export default function ModulesPage() {
             )}
           </div>
         ) : (
-          <div className="space-y-8">
-            {Object.entries(groupedModules).sort().map(([manufacturer, mods]) => (
-              <div key={manufacturer}>
-                <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-                  <Boxes className="h-5 w-5 mr-2 text-primary-600" />
-                  {manufacturer}
-                  <span className="ml-2 text-sm font-normal text-gray-500">
-                    ({mods.length} {mods.length === 1 ? 'module' : 'modules'})
-                  </span>
-                </h2>
-                <div className="grid gap-4 lg:grid-cols-2">
-                  {mods.map((module) => (
-                    <div
-                      key={module.id}
-                      className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition group"
-                    >
-                      <div className="flex">
-                        {/* Module Info - Left Side */}
-                        <div className="flex-1 p-6 flex flex-col">
-                          <div className="flex justify-between items-start mb-3">
-                            <div className="flex-1">
-                              <Link href={`/modules/${module.id}`}>
-                                <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-primary-600 transition">
-                                  {module.name}
-                                </h3>
-                              </Link>
-                              {module.type && (
-                                <span className="inline-block px-2 py-1 bg-primary-100 text-primary-700 text-xs rounded-full">
-                                  {module.type}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-
-                          {module.notes && (
-                            <p className="text-gray-600 text-sm mb-4 line-clamp-3 flex-1">
-                              {module.notes}
-                            </p>
-                          )}
-
-                          <div className="flex items-center justify-between pt-4 border-t mt-auto">
-                            <Link
-                              href={`/modules/${module.id}`}
-                              className="text-primary-600 hover:text-primary-700 font-medium text-sm"
-                            >
-                              View Details
-                            </Link>
-                            <div className="flex space-x-2">
-                              <Link
-                                href={`/modules/${module.id}/edit`}
-                                className="p-2 text-gray-600 hover:text-primary-600 transition"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Link>
-                              <button
-                                onClick={() => handleDelete(module.id)}
-                                className="p-2 text-gray-600 hover:text-red-600 transition"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Module Image - Right Side (Portrait) */}
-                        <Link href={`/modules/${module.id}`} className="flex-shrink-0">
-                          {module.images && module.images.length > 0 ? (
-                            <div className="relative w-32 h-full bg-gray-100 overflow-hidden">
-                              <Image
-                                src={module.images[0]}
-                                alt={module.name}
-                                fill
-                                className="object-cover group-hover:scale-105 transition duration-300"
-                              />
-                            </div>
-                          ) : (
-                            <div className="w-32 h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                              <Boxes className="h-12 w-12 text-gray-400" />
-                            </div>
-                          )}
+          <>
+            <div className="grid gap-4 grid-cols-2">
+              {paginatedModules.map((module) => (
+              <div
+                key={module.id}
+                className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition group"
+              >
+                <div className="flex">
+                  {/* Module Info - Left Side */}
+                  <div className="flex-1 p-6 flex flex-col">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex-1">
+                        <Link href={`/modules/${module.id}`}>
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-primary-600 transition">
+                            {module.name}
+                          </h3>
                         </Link>
+                        <p className="text-sm text-gray-500 mb-2">{module.manufacturer}</p>
+                        {module.type && (
+                          <span className="inline-block px-2 py-1 bg-primary-100 text-primary-700 text-xs rounded-full">
+                            {module.type}
+                          </span>
+                        )}
                       </div>
                     </div>
-                  ))}
+
+                    {module.notes && (
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-3 flex-1">
+                        {module.notes}
+                      </p>
+                    )}
+
+                    <div className="flex items-center justify-between pt-4 border-t mt-auto">
+                      <Link
+                        href={`/modules/${module.id}`}
+                        className="text-primary-600 hover:text-primary-700 font-medium text-sm"
+                      >
+                        View Details
+                      </Link>
+                      <div className="flex space-x-2">
+                        <Link
+                          href={`/modules/${module.id}/edit`}
+                          className="p-2 text-gray-600 hover:text-primary-600 transition"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(module.id)}
+                          className="p-2 text-gray-600 hover:text-red-600 transition"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Module Image - Right Side (Portrait) */}
+                  <Link href={`/modules/${module.id}`} className="flex-shrink-0">
+                    {module.images && module.images.length > 0 ? (
+                      <div className="relative w-32 h-full bg-gray-100 overflow-hidden">
+                        <Image
+                          src={module.images[0]}
+                          alt={module.name}
+                          fill
+                          className="object-cover group-hover:scale-105 transition duration-300"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-32 h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                        <Boxes className="h-12 w-12 text-gray-400" />
+                      </div>
+                    )}
+                  </Link>
                 </div>
               </div>
-            ))}
-          </div>
+              ))}
+            </div>
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              itemsPerPage={itemsPerPage}
+              totalItems={filteredModules.length}
+              onPageChange={handlePageChange}
+              onItemsPerPageChange={handleItemsPerPageChange}
+            />
+          </>
         )}
       </main>
     </div>

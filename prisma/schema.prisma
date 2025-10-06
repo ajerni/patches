@@ -31,6 +31,7 @@ model Patch {
   tags          String[]      @default([])
   images        String[]      @default([])
   sounds        String[]      @default([])
+  schema        Json?
   userId        String
   user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   patchModules  PatchModule[]

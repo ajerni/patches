@@ -2,9 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { X, Plus, Loader2 } from "lucide-react";
+import { X, Plus, Loader2, Network } from "lucide-react";
 import { ImageUpload } from "./ImageUpload";
 import { ModuleSelector } from "./ModuleSelector";
+import dynamic from "next/dynamic";
+import { SchemaData } from "./PatchSchemaEditor";
+
+// Dynamically import the schema editor to avoid SSR issues with canvas
+const PatchSchemaEditor = dynamic(() => import("./PatchSchemaEditor"), {
+  ssr: false,
+  loading: () => <div>Loading editor...</div>
+});
 
 interface PatchFormProps {
   patch?: {
@@ -16,6 +24,7 @@ interface PatchFormProps {
     tags: string[];
     images: string[];
     sounds: string[];
+    schema?: any;
     patchModules?: Array<{
       module: {
         id: string;
@@ -43,6 +52,8 @@ export function PatchForm({ patch, isEdit = false }: PatchFormProps) {
   const [moduleIds, setModuleIds] = useState<string[]>(
     patch?.patchModules?.map((pm) => pm.module.id) || []
   );
+  const [schema, setSchema] = useState<SchemaData | null>(patch?.schema || null);
+  const [showSchemaEditor, setShowSchemaEditor] = useState(false);
 
   const [newTag, setNewTag] = useState("");
   const [newSound, setNewSound] = useState("");
@@ -61,6 +72,7 @@ export function PatchForm({ patch, isEdit = false }: PatchFormProps) {
       images,
       sounds,
       moduleIds,
+      schema,
     };
 
     try {
@@ -250,6 +262,29 @@ export function PatchForm({ patch, isEdit = false }: PatchFormProps) {
         <ImageUpload images={images} onImagesChange={setImages} />
       </div>
 
+      {/* Patch Schema Editor */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Patch Schema
+        </label>
+        <p className="text-sm text-gray-500 mb-3">
+          Create a visual diagram of your patch using module symbols and colored cables
+        </p>
+        <button
+          type="button"
+          onClick={() => setShowSchemaEditor(true)}
+          className="flex items-center gap-2 px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition"
+        >
+          <Network className="h-5 w-5" />
+          {schema ? "Edit Schema" : "Create Schema"}
+        </button>
+        {schema && (
+          <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
+            ✓ Schema saved ({schema.symbols.length} symbols, {schema.cables.length} cables)
+          </div>
+        )}
+      </div>
+
       {/* Sounds */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -323,6 +358,18 @@ export function PatchForm({ patch, isEdit = false }: PatchFormProps) {
           Cancel
         </button>
       </div>
+
+      {/* Schema Editor Modal */}
+      {showSchemaEditor && (
+        <PatchSchemaEditor
+          initialSchema={schema}
+          onSave={(newSchema) => {
+            setSchema(newSchema);
+            setShowSchemaEditor(false);
+          }}
+          onClose={() => setShowSchemaEditor(false)}
+        />
+      )}
     </form>
   );
 }
