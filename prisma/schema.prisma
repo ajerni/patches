@@ -10,14 +10,15 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String
-  password      String
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  patches       Patch[]
-  modules       Module[]
+  id                    String                @id @default(cuid())
+  email                 String                @unique
+  name                  String
+  password              String
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  patches               Patch[]
+  modules               Module[]
+  passwordResetTokens   PasswordResetToken[]
   
   @@map("patches_users")
 }
@@ -71,5 +72,20 @@ model PatchModule {
   @@index([patchId])
   @@index([moduleId])
   @@map("patches_patch_modules")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("patches_password_reset_tokens")
 }
 
