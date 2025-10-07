@@ -225,7 +225,7 @@ export default function PatchDetailPage({ params }: { params: { id: string } }) 
             </h2>
             <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
               Visual diagram showing the signal flow and connections in this patch.
-              <span className="block mt-1">
+              <span className="block mt-1 text-xs">
                 <span className="inline-block w-3 h-3 bg-yellow-500 rounded-full mr-1"></span> Audio 
                 <span className="inline-block w-3 h-3 bg-gray-500 rounded-full mr-1 ml-2"></span> 1V/oct 
                 <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-1 ml-2"></span> CV 
@@ -233,7 +233,7 @@ export default function PatchDetailPage({ params }: { params: { id: string } }) 
                 <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-1 ml-2"></span> Clock
               </span>
             </p>
-            <div className="overflow-x-auto">
+            <div className="w-full">
               <PatchSchemaViewer schema={patch.schema} width={1200} height={800} />
             </div>
             </div>

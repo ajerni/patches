@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Stage, Layer, Line, Image as KonvaImage } from 'react-konva';
 import { SchemaData } from './PatchSchemaEditor';
 import { PATCH_SCHEMA_SYMBOLS } from '@/lib/patchSchemaSymbols';
@@ -14,6 +14,27 @@ interface PatchSchemaViewerProps {
 export default function PatchSchemaViewer({ schema, width = 1200, height = 800 }: PatchSchemaViewerProps) {
   const [loadedImages, setLoadedImages] = useState<Map<string, HTMLImageElement>>(new Map());
   const [loading, setLoading] = useState(true);
+  const [containerWidth, setContainerWidth] = useState(width);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Handle responsive sizing
+  useEffect(() => {
+    const updateSize = () => {
+      if (containerRef.current) {
+        const containerWidth = containerRef.current.offsetWidth;
+        // Only scale down if container is smaller than the desired width
+        if (containerWidth < width) {
+          setContainerWidth(containerWidth);
+        } else {
+          setContainerWidth(width);
+        }
+      }
+    };
+
+    updateSize();
+    window.addEventListener('resize', updateSize);
+    return () => window.removeEventListener('resize', updateSize);
+  }, [width]);
 
   useEffect(() => {
     const loadImages = async () => {
@@ -49,11 +70,16 @@ export default function PatchSchemaViewer({ schema, width = 1200, height = 800 }
     loadImages();
   }, [schema]);
 
+  // Calculate scale factor to maintain aspect ratio
+  const scale = containerWidth / width;
+  const scaledHeight = height * scale;
+
   if (loading) {
     return (
       <div 
-        className="bg-gray-100 border-2 border-gray-300 rounded flex items-center justify-center"
-        style={{ width, height }}
+        ref={containerRef}
+        className="bg-gray-100 border-2 border-gray-300 rounded flex items-center justify-center w-full"
+        style={{ height: scaledHeight, maxWidth: width }}
       >
         <div className="text-gray-500">Loading schema...</div>
       </div>
@@ -63,8 +89,9 @@ export default function PatchSchemaViewer({ schema, width = 1200, height = 800 }
   if (!schema.symbols.length && !schema.cables.length) {
     return (
       <div 
-        className="bg-gray-100 border-2 border-gray-300 rounded flex items-center justify-center"
-        style={{ width, height }}
+        ref={containerRef}
+        className="bg-gray-100 border-2 border-gray-300 rounded flex items-center justify-center w-full"
+        style={{ height: scaledHeight, maxWidth: width }}
       >
         <div className="text-gray-500">No schema available</div>
       </div>
@@ -72,8 +99,8 @@ export default function PatchSchemaViewer({ schema, width = 1200, height = 800 }
   }
 
   return (
-    <div className="bg-white border-2 border-gray-300 rounded overflow-hidden">
-      <Stage width={width} height={height}>
+    <div ref={containerRef} className="bg-white border-2 border-gray-300 rounded overflow-hidden w-full" style={{ maxWidth: width }}>
+      <Stage width={containerWidth} height={scaledHeight} scaleX={scale} scaleY={scale}>
         <Layer>
           {/* Grid background */}
           {Array.from({ length: Math.floor(height / 50) }).map((_, i) => (
