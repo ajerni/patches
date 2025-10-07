@@ -113,24 +113,24 @@ export default function PatchDetailPage({ params }: { params: { id: string } }) 
         {/* Main Content Card */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-primary-500 to-primary-600 px-8 py-6">
-            <div className="flex justify-between items-start mb-3">
+          <div className="bg-gradient-to-r from-primary-500 to-primary-600 px-4 sm:px-8 py-4 sm:py-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-3 mb-3">
               <div className="flex-1">
-                <h1 className="text-3xl font-bold text-white mb-2">{patch.title}</h1>
-                <div className="flex items-center space-x-4 text-sm text-primary-50">
+                <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">{patch.title}</h1>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-primary-50">
                   <div className="flex items-center space-x-1">
-                    <Calendar className="h-4 w-4" />
+                    <Calendar className="h-3 sm:h-4 w-3 sm:w-4" />
                     <span>
                       Updated {new Date(patch.updatedAt).toLocaleDateString()}
                     </span>
                   </div>
-                  <span>•</span>
+                  <span className="hidden sm:inline">•</span>
                   <span>by {patch.user.name}</span>
                 </div>
               </div>
               <Link
                 href={`/patches/${patch.id}/edit`}
-                className="flex items-center space-x-2 bg-white text-primary-600 hover:bg-primary-50 px-4 py-2 rounded-lg transition font-medium"
+                className="flex items-center justify-center space-x-2 bg-white text-primary-600 hover:bg-primary-50 px-3 sm:px-4 py-2 rounded-lg transition font-medium text-sm sm:text-base w-full sm:w-auto"
               >
                 <Edit className="h-4 w-4" />
                 <span>Edit</span>
@@ -156,25 +156,25 @@ export default function PatchDetailPage({ params }: { params: { id: string } }) 
           </div>
 
           {/* Description */}
-          <div className="px-8 py-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Description</h2>
-          <p className="text-gray-700 whitespace-pre-wrap">{patch.description}</p>
+          <div className="px-4 sm:px-8 py-4 sm:py-6 border-b border-gray-200">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Description</h2>
+          <p className="text-sm sm:text-base text-gray-700 whitespace-pre-wrap">{patch.description}</p>
         </div>
 
           {/* Modules Used */}
           {patch.patchModules && patch.patchModules.length > 0 && (
             <div className="border-b border-gray-200">
-              <div className="bg-gradient-to-r from-primary-50 to-primary-100/50 px-8 py-4 border-b border-primary-200">
-              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                <Boxes className="h-5 w-5 text-primary-600" />
+              <div className="bg-gradient-to-r from-primary-50 to-primary-100/50 px-4 sm:px-8 py-3 sm:py-4 border-b border-primary-200">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <Boxes className="h-4 sm:h-5 w-4 sm:w-5 text-primary-600" />
                 Modules Used
-                <span className="ml-2 text-sm font-normal text-gray-600">
+                <span className="ml-1 sm:ml-2 text-xs sm:text-sm font-normal text-gray-600">
                   ({patch.patchModules.length})
                 </span>
               </h2>
             </div>
-            <div className="p-6 bg-gray-50/50">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="p-4 sm:p-6 bg-gray-50/50">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
                 {patch.patchModules.map(({ module }) => (
                   <Link
                     key={module.id}
@@ -218,12 +218,12 @@ export default function PatchDetailPage({ params }: { params: { id: string } }) 
 
           {/* Patch Schema */}
           {patch.schema && (
-            <div className="px-8 py-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Network className="h-5 w-5" />
+            <div className="px-4 sm:px-8 py-4 sm:py-6 border-b border-gray-200">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
+              <Network className="h-4 sm:h-5 w-4 sm:w-5" />
               Patch Schema
             </h2>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
               Visual diagram showing the signal flow and connections in this patch.
               <span className="block mt-1">
                 <span className="inline-block w-3 h-3 bg-yellow-500 rounded-full mr-1"></span> Audio 
@@ -241,34 +241,34 @@ export default function PatchDetailPage({ params }: { params: { id: string } }) 
 
           {/* Instructions */}
           {patch.instructions && (
-            <div className="px-8 py-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Instructions</h2>
-              <p className="text-gray-700 whitespace-pre-wrap">{patch.instructions}</p>
+            <div className="px-4 sm:px-8 py-4 sm:py-6 border-b border-gray-200">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Instructions</h2>
+              <p className="text-sm sm:text-base text-gray-700 whitespace-pre-wrap">{patch.instructions}</p>
             </div>
           )}
 
           {/* Notes */}
           {patch.notes && (
-            <div className="px-8 py-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Notes</h2>
-              <p className="text-gray-700 whitespace-pre-wrap">{patch.notes}</p>
+            <div className="px-4 sm:px-8 py-4 sm:py-6 border-b border-gray-200">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Notes</h2>
+              <p className="text-sm sm:text-base text-gray-700 whitespace-pre-wrap">{patch.notes}</p>
             </div>
           )}
 
           {/* Images */}
           {patch.images.length > 0 && (
             <div className="border-b border-gray-200">
-              <div className="bg-gradient-to-r from-primary-50 to-primary-100/50 px-8 py-4 border-b border-primary-200">
-              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                <ImageIcon className="h-5 w-5 text-primary-600" />
+              <div className="bg-gradient-to-r from-primary-50 to-primary-100/50 px-4 sm:px-8 py-3 sm:py-4 border-b border-primary-200">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <ImageIcon className="h-4 sm:h-5 w-4 sm:w-5 text-primary-600" />
                 Images
-                <span className="ml-2 text-sm font-normal text-gray-600">
+                <span className="ml-1 sm:ml-2 text-xs sm:text-sm font-normal text-gray-600">
                   ({patch.images.length})
                 </span>
               </h2>
             </div>
-            <div className="p-6 bg-gray-50/50">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 sm:p-6 bg-gray-50/50">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 {patch.images.map((image, idx) => (
                   <a
                     key={idx}
@@ -292,16 +292,16 @@ export default function PatchDetailPage({ params }: { params: { id: string } }) 
           {/* Sounds */}
           {patch.sounds.length > 0 && (
             <div>
-              <div className="bg-gradient-to-r from-primary-50 to-primary-100/50 px-8 py-4 border-b border-primary-200">
-              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                <Volume2 className="h-5 w-5 text-primary-600" />
+              <div className="bg-gradient-to-r from-primary-50 to-primary-100/50 px-4 sm:px-8 py-3 sm:py-4 border-b border-primary-200">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <Volume2 className="h-4 sm:h-5 w-4 sm:w-5 text-primary-600" />
                 Audio Examples
-                <span className="ml-2 text-sm font-normal text-gray-600">
+                <span className="ml-1 sm:ml-2 text-xs sm:text-sm font-normal text-gray-600">
                   ({patch.sounds.length})
                 </span>
               </h2>
             </div>
-            <div className="p-6 bg-gray-50/50 space-y-4">
+            <div className="p-4 sm:p-6 bg-gray-50/50 space-y-3 sm:space-y-4">
               {patch.sounds.map((sound, idx) => (
                 <div key={idx} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                   <HearthisEmbed url={sound} index={idx} />

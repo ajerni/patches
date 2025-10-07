@@ -7,16 +7,16 @@ export default function Home() {
     <div className="min-h-screen">
       <Navbar />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Hero Section */}
-        <div className="text-center mb-16">
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">
+        <div className="text-center mb-12 sm:mb-16">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
             Document Your Patches
           </h1>
-          <p className="text-xl text-gray-600 mb-8">
+          <p className="text-lg sm:text-xl text-gray-600 mb-6 sm:mb-8 px-4">
             Organize your modular synthesis creations
           </p>
-          <div className="flex justify-center space-x-4">
+          <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 px-4">
             <Link
               href="/register"
               className="bg-primary-600 text-white hover:bg-primary-700 px-8 py-3 rounded-lg text-lg font-medium transition"
@@ -33,7 +33,7 @@ export default function Home() {
         </div>
 
         {/* Features Section */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-12 sm:mb-16">
           <FeatureCard
             icon={<FileText className="h-10 w-10 text-primary-600" />}
             title="Documentation"
@@ -62,31 +62,31 @@ export default function Home() {
           <FeatureCard
             icon={<Music className="h-10 w-10 text-primary-600" />}
             title="Personal Library"
-            description="Build your own collection of patches with full privacy"
+            description="Build your own collection of patches with full privacy. Keep your patches private or share them with the community."
           />
           
         </div>
 
         {/* CTA Section */}
-        <div className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-2xl p-12 text-center text-white">
-          <h2 className="text-3xl font-bold mb-4">
+        <div className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-2xl p-6 sm:p-12 text-center text-white">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">
             Start Building Your Patch Library Today
           </h2>
-          <p className="text-lg mb-6 opacity-90">
+          <p className="text-base sm:text-lg mb-6 opacity-90 px-2">
             Join the community of modular synthesists documenting their creative work
           </p>
           <Link
             href="/register"
-            className="inline-block bg-white text-primary-600 hover:bg-gray-100 px-8 py-3 rounded-lg text-lg font-medium transition"
+            className="inline-block bg-white text-primary-600 hover:bg-gray-100 px-6 sm:px-8 py-3 rounded-lg text-base sm:text-lg font-medium transition"
           >
             Create Free Account
           </Link>
         </div>
       </main>
 
-      <footer className="bg-gray-800 text-white mt-16 py-8">
+      <footer className="bg-gray-800 text-white mt-12 sm:mt-16 py-6 sm:py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p>&copy; 2025 Synth Patch Library. All rights reserved.</p>
+          <p className="text-sm sm:text-base">&copy; 2025 Synth Patch Library. All rights reserved.</p>
         </div>
       </footer>
     </div>

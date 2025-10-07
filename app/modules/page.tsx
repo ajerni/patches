@@ -118,16 +118,16 @@ export default function ModulesPage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Modules</h1>
-          <p className="text-gray-600">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">My Modules</h1>
+          <p className="text-sm sm:text-base text-gray-600">
             Manage your module collection
           </p>
         </div>
 
         {/* Actions Bar */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <div className="relative flex-1 max-w-md">
+        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sm:gap-4 mb-6">
+          <div className="relative flex-1 w-full sm:max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
               type="text"
@@ -139,7 +139,7 @@ export default function ModulesPage() {
           </div>
           <Link
             href="/modules/new"
-            className="flex items-center space-x-2 bg-primary-600 text-white hover:bg-primary-700 px-6 py-2 rounded-lg font-medium transition"
+            className="flex items-center justify-center space-x-2 bg-primary-600 text-white hover:bg-primary-700 px-6 py-2 rounded-lg font-medium transition"
           >
             <Plus className="h-5 w-5" />
             <span>Add Module</span>
@@ -182,7 +182,7 @@ export default function ModulesPage() {
           </div>
         ) : (
           <>
-            <div className="grid gap-4 grid-cols-2">
+            <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
               {paginatedModules.map((module) => (
               <div
                 key={module.id}
@@ -240,7 +240,7 @@ export default function ModulesPage() {
                   {/* Module Image - Right Side (Portrait) */}
                   <Link href={`/modules/${module.id}`} className="flex-shrink-0">
                     {module.images && module.images.length > 0 ? (
-                      <div className="relative w-32 h-full bg-gray-100 overflow-hidden">
+                      <div className="relative w-24 sm:w-32 h-full bg-gray-100 overflow-hidden">
                         <Image
                           src={module.images[0]}
                           alt={module.name}
@@ -249,8 +249,8 @@ export default function ModulesPage() {
                         />
                       </div>
                     ) : (
-                      <div className="w-32 h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                        <Boxes className="h-12 w-12 text-gray-400" />
+                      <div className="w-24 sm:w-32 h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                        <Boxes className="h-8 sm:h-12 w-8 sm:w-12 text-gray-400" />
                       </div>
                     )}
                   </Link>

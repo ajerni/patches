@@ -118,16 +118,16 @@ export default function DashboardPage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Patches</h1>
-          <p className="text-gray-600">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">My Patches</h1>
+          <p className="text-sm sm:text-base text-gray-600">
             Oganize your modular synthesis patch documentation
           </p>
         </div>
 
         {/* Actions Bar */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <div className="relative flex-1 max-w-md">
+        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sm:gap-4 mb-6">
+          <div className="relative flex-1 w-full sm:max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
               type="text"
@@ -139,7 +139,7 @@ export default function DashboardPage() {
           </div>
           <Link
             href="/patches/new"
-            className="flex items-center space-x-2 bg-primary-600 text-white hover:bg-primary-700 px-6 py-2 rounded-lg font-medium transition"
+            className="flex items-center justify-center space-x-2 bg-primary-600 text-white hover:bg-primary-700 px-6 py-2 rounded-lg font-medium transition"
           >
             <Plus className="h-5 w-5" />
             <span>New Patch</span>
@@ -170,7 +170,7 @@ export default function DashboardPage() {
           </div>
         ) : (
           <>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
               {paginatedPatches.map((patch) => (
               <div
                 key={patch.id}

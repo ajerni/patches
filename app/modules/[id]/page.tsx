@@ -102,30 +102,30 @@ export default function ModuleDetailPage({ params }: { params: { id: string } })
         {/* Main Content Card */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-primary-500 to-primary-600 px-8 py-6">
-            <div className="flex justify-between items-start mb-3">
+          <div className="bg-gradient-to-r from-primary-500 to-primary-600 px-4 sm:px-8 py-4 sm:py-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-3 mb-3">
               <div className="flex-1">
-                <div className="flex items-center space-x-3 mb-2">
-                  <Boxes className="h-8 w-8 text-white" />
-                  <div>
-                    <h1 className="text-3xl font-bold text-white">{module.name}</h1>
-                    <p className="text-lg text-primary-50">{module.manufacturer}</p>
+                <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                  <Boxes className="h-6 sm:h-8 w-6 sm:w-8 text-white flex-shrink-0" />
+                  <div className="min-w-0">
+                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white break-words">{module.name}</h1>
+                    <p className="text-base sm:text-lg text-primary-50">{module.manufacturer}</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-4 text-sm text-primary-50 mt-3">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-primary-50 mt-2 sm:mt-3">
                   <div className="flex items-center space-x-1">
-                    <Calendar className="h-4 w-4" />
+                    <Calendar className="h-3 sm:h-4 w-3 sm:w-4" />
                     <span>
                       Updated {new Date(module.updatedAt).toLocaleDateString()}
                     </span>
                   </div>
-                  <span>•</span>
+                  <span className="hidden sm:inline">•</span>
                   <span>by {module.user.name}</span>
                 </div>
               </div>
               <Link
                 href={`/modules/${module.id}/edit`}
-                className="flex items-center space-x-2 bg-white text-primary-600 hover:bg-primary-50 px-4 py-2 rounded-lg transition font-medium"
+                className="flex items-center justify-center space-x-2 bg-white text-primary-600 hover:bg-primary-50 px-3 sm:px-4 py-2 rounded-lg transition font-medium text-sm sm:text-base w-full sm:w-auto"
               >
                 <Edit className="h-4 w-4" />
                 <span>Edit</span>
@@ -145,17 +145,17 @@ export default function ModuleDetailPage({ params }: { params: { id: string } })
           {/* Images */}
           {module.images && module.images.length > 0 && (
             <div className="border-b border-gray-200">
-              <div className="bg-gradient-to-r from-primary-50 to-primary-100/50 px-8 py-4 border-b border-primary-200">
-              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                <ImageIcon className="h-5 w-5 text-primary-600" />
+              <div className="bg-gradient-to-r from-primary-50 to-primary-100/50 px-4 sm:px-8 py-3 sm:py-4 border-b border-primary-200">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <ImageIcon className="h-4 sm:h-5 w-4 sm:w-5 text-primary-600" />
                 Images
-                <span className="ml-2 text-sm font-normal text-gray-600">
+                <span className="ml-1 sm:ml-2 text-xs sm:text-sm font-normal text-gray-600">
                   ({module.images.length})
                 </span>
               </h2>
             </div>
-            <div className="p-6 bg-gray-50/50">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="p-4 sm:p-6 bg-gray-50/50">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                 {module.images.map((imageUrl, idx) => (
                   <div
                     key={idx}
@@ -176,26 +176,26 @@ export default function ModuleDetailPage({ params }: { params: { id: string } })
 
           {/* Notes */}
           {module.notes && (
-            <div className="px-8 py-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Notes</h2>
-              <p className="text-gray-700 whitespace-pre-wrap">{module.notes}</p>
+            <div className="px-4 sm:px-8 py-4 sm:py-6 border-b border-gray-200">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Notes</h2>
+              <p className="text-sm sm:text-base text-gray-700 whitespace-pre-wrap">{module.notes}</p>
             </div>
           )}
 
           {/* Used in Patches */}
           {module.patchModules && module.patchModules.length > 0 && (
             <div className="border-b border-gray-200">
-              <div className="bg-gradient-to-r from-primary-50 to-primary-100/50 px-8 py-4 border-b border-primary-200">
-              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                <Music className="h-5 w-5 text-primary-600" />
+              <div className="bg-gradient-to-r from-primary-50 to-primary-100/50 px-4 sm:px-8 py-3 sm:py-4 border-b border-primary-200">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <Music className="h-4 sm:h-5 w-4 sm:w-5 text-primary-600" />
                 Used in Patches
-                <span className="ml-2 text-sm font-normal text-gray-600">
+                <span className="ml-1 sm:ml-2 text-xs sm:text-sm font-normal text-gray-600">
                   ({module.patchModules.length})
                 </span>
               </h2>
             </div>
-            <div className="p-6 bg-gray-50/50">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="p-4 sm:p-6 bg-gray-50/50">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                 {module.patchModules.map(({ patch }) => (
                   <Link
                     key={patch.id}
@@ -250,9 +250,9 @@ export default function ModuleDetailPage({ params }: { params: { id: string } })
           )}
 
           {/* Module Info */}
-          <div className="px-8 py-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Module Information</h2>
-            <dl className="grid grid-cols-2 gap-4">
+          <div className="px-4 sm:px-8 py-4 sm:py-6">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Module Information</h2>
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <dt className="text-sm font-medium text-gray-500">Manufacturer</dt>
                 <dd className="mt-1 text-sm text-gray-900">{module.manufacturer}</dd>
