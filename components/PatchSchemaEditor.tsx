@@ -59,35 +59,98 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
   const [drawingCable, setDrawingCable] = useState<number[] | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
+  const [containerWidth, setContainerWidth] = useState(0);
+  const [containerHeight, setContainerHeight] = useState(0);
+  const [zoomLevel, setZoomLevel] = useState(1);
   
   const stageRef = useRef<Konva.Stage>(null);
   const layerRef = useRef<Konva.Layer>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
 
   const BASE_CANVAS_WIDTH = 1200;
   const BASE_CANVAS_HEIGHT = 800;
   
-  // Calculate responsive canvas size
-  const canvasScale = isMobile ? 0.3 : 1; // Scale to 30% on mobile
-  const CANVAS_WIDTH = BASE_CANVAS_WIDTH * canvasScale;
-  const CANVAS_HEIGHT = BASE_CANVAS_HEIGHT * canvasScale;
+  // Calculate responsive canvas size for desktop (unchanged)
+  const CANVAS_WIDTH = BASE_CANVAS_WIDTH;
+  const CANVAS_HEIGHT = BASE_CANVAS_HEIGHT;
+  
+  // Calculate scale to fit on mobile
+  const getFitScale = () => {
+    if (!isMobile || !containerWidth || !containerHeight) return 1;
+    const scaleX = (containerWidth - 20) / BASE_CANVAS_WIDTH; // 20px padding
+    const scaleY = (containerHeight - 20) / BASE_CANVAS_HEIGHT;
+    return Math.min(scaleX, scaleY, 1); // Never scale up beyond 100%
+  };
+  
+  const fitScale = getFitScale();
+  const mobileScale = fitScale * zoomLevel;
 
   // Detect mobile screen size
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
-      // Auto-hide sidebar on mobile
-      if (window.innerWidth < 768) {
-        setShowSidebar(false);
-      } else {
-        setShowSidebar(true);
-      }
+      // Sidebar is visible by default on both mobile and desktop
+      // Users can toggle it manually if needed
     };
 
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Measure canvas container size (mobile only)
+  useEffect(() => {
+    if (!isMobile) return;
+
+    const updateContainerSize = () => {
+      if (canvasContainerRef.current) {
+        const rect = canvasContainerRef.current.getBoundingClientRect();
+        setContainerWidth(rect.width);
+        setContainerHeight(rect.height);
+      }
+    };
+
+    // Immediate measurement
+    if (canvasContainerRef.current) {
+      updateContainerSize();
+    }
+
+    // Also measure after a short delay to ensure layout is complete
+    const timeoutId = setTimeout(updateContainerSize, 100);
+
+    window.addEventListener('resize', updateContainerSize);
+    
+    // Use ResizeObserver for more accurate container size tracking
+    let resizeObserver: ResizeObserver | null = null;
+    if (canvasContainerRef.current) {
+      resizeObserver = new ResizeObserver(updateContainerSize);
+      resizeObserver.observe(canvasContainerRef.current);
+    }
+
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('resize', updateContainerSize);
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+    };
+  }, [isMobile, showSidebar]); // Re-measure when sidebar visibility changes
+
+  // Reset zoom and re-measure when toggling sidebar on mobile
+  useEffect(() => {
+    if (isMobile) {
+      setZoomLevel(1);
+      // Force re-measurement after sidebar animation completes
+      setTimeout(() => {
+        if (canvasContainerRef.current) {
+          const rect = canvasContainerRef.current.getBoundingClientRect();
+          setContainerWidth(rect.width);
+          setContainerHeight(rect.height);
+        }
+      }, 50);
+    }
+  }, [showSidebar, isMobile]);
 
   // Load SVG images from cache or preload them
   useEffect(() => {
@@ -238,7 +301,21 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
     const stage = stageRef.current;
     if (!stage) return;
 
+    // Temporarily reset position and scale for export
+    const originalX = stage.x();
+    const originalY = stage.y();
+    const originalScaleX = stage.scaleX();
+    const originalScaleY = stage.scaleY();
+    
+    stage.position({ x: 0, y: 0 });
+    stage.scale({ x: 1, y: 1 });
+
     const dataURL = stage.toDataURL({ pixelRatio: 2 });
+    
+    // Restore original position and scale
+    stage.position({ x: originalX, y: originalY });
+    stage.scale({ x: originalScaleX, y: originalScaleY });
+
     const link = document.createElement('a');
     link.download = 'patch-schema.png';
     link.href = dataURL;
@@ -329,7 +406,7 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
         <div className="flex flex-1 overflow-hidden">
           {/* Sidebar - Symbol Palette */}
           {showSidebar && (
-          <div className={`${isMobile ? 'w-32' : 'w-64'} border-r bg-gray-50 overflow-y-auto p-2 sm:p-4`}>
+          <div className={`${isMobile ? 'w-40' : 'w-64'} border-r bg-gray-50 overflow-y-auto p-2 sm:p-4`}>
             <h3 className={`font-bold mb-2 sm:mb-3 text-gray-900 ${isMobile ? 'text-xs' : 'text-base'}`}>
               {isMobile ? 'Symbols' : 'Symbol Library'}
             </h3>
@@ -351,10 +428,7 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
                       : 'bg-white text-gray-700 hover:bg-gray-100'
                   }`}
                 >
-                  {isMobile 
-                    ? cat.split('-')[0].toUpperCase().slice(0, 5)
-                    : cat.replace('-', ' ').toUpperCase()
-                  }
+                  {cat.replace('-', ' ').replace(/\b\w/g, c => c.toUpperCase())}
                 </button>
               ))}
             </div>
@@ -396,14 +470,14 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
           {/* Main Canvas Area */}
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Toolbar */}
-            <div className={`flex flex-col sm:flex-row items-start sm:items-center ${isMobile ? 'justify-start gap-1 p-1' : 'justify-between p-3'} border-b bg-gray-50`}>
+            <div className={`flex flex-col lg:flex-row items-start lg:items-center gap-2 ${isMobile ? 'p-1' : 'p-3'} border-b bg-gray-50`}>
               {/* Tool Selection */}
               <div className="flex items-center gap-1 sm:gap-2">
-                {!isMobile && <span className="text-sm font-medium text-gray-700">Tool:</span>}
+                {!isMobile && <span className="text-xs sm:text-sm font-medium text-gray-700">Tool:</span>}
                 <button
                   type="button"
                   onClick={() => setTool('select')}
-                  className={`px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-sm rounded ${
+                  className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded whitespace-nowrap ${
                     tool === 'select'
                       ? 'bg-blue-600 text-white'
                       : 'bg-white text-gray-700 hover:bg-gray-100'
@@ -414,7 +488,7 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
                 <button
                   type="button"
                   onClick={() => setTool('cable')}
-                  className={`px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-sm rounded ${
+                  className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded whitespace-nowrap ${
                     tool === 'cable'
                       ? 'bg-blue-600 text-white'
                       : 'bg-white text-gray-700 hover:bg-gray-100'
@@ -427,14 +501,14 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
               {/* Cable Color Selection */}
               {tool === 'cable' && (
                 <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-                  {!isMobile && <span className="text-xs sm:text-sm font-medium text-gray-700">Cable Type:</span>}
+                  {!isMobile && <span className="text-xs sm:text-sm font-medium text-gray-700 whitespace-nowrap">Cable Type:</span>}
                   {Object.entries(CABLE_COLORS).map(([type, color]) => (
                     <button
                       key={type}
                       type="button"
                       onClick={() => setCableType(type as CableType)}
-                      className={`px-1.5 sm:px-3 py-0.5 sm:py-1 text-[9px] sm:text-sm rounded border-2 ${
-                        cableType === type ? 'border-black' : 'border-transparent'
+                      className={`px-2 sm:px-3 md:px-4 py-1 text-xs sm:text-sm font-medium rounded border-2 transition-all whitespace-nowrap ${
+                        cableType === type ? 'border-black shadow-md' : 'border-transparent'
                       }`}
                       style={{ backgroundColor: color, color: type === 'audio' ? '#000' : '#fff' }}
                       title={type}
@@ -446,12 +520,12 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
               )}
 
               {/* Actions */}
-              <div className="flex items-center gap-1 sm:gap-2">
+              <div className="flex items-center gap-1 sm:gap-2 lg:ml-auto">
                 <button
                   type="button"
                   onClick={handleDelete}
                   disabled={!selectedId}
-                  className="px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                 >
                   Delete
                 </button>
@@ -459,7 +533,7 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
                   <button
                     type="button"
                     onClick={handleClear}
-                    className="px-3 py-1 text-sm bg-gray-600 text-white rounded hover:bg-gray-700"
+                    className="px-3 py-1 text-sm bg-gray-600 text-white rounded hover:bg-gray-700 whitespace-nowrap"
                   >
                     Clear All
                   </button>
@@ -468,11 +542,57 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
             </div>
 
             {/* Canvas */}
-            <div className={`flex-1 overflow-auto bg-gray-100 ${isMobile ? 'p-1' : 'p-4'}`}>
-              <div className="bg-white border-2 border-gray-300" style={{ width: CANVAS_WIDTH, height: CANVAS_HEIGHT }}>
+            <div 
+              ref={canvasContainerRef}
+              className={`flex-1 overflow-auto bg-gray-100 ${isMobile ? 'p-1 flex items-center justify-center' : 'p-4'} relative`}
+            >
+              {/* Mobile Zoom Controls */}
+              {isMobile && containerWidth > 0 && (
+                <div className="absolute top-2 right-2 z-10 flex flex-col gap-1 bg-white rounded-lg shadow-lg p-1 border border-gray-300">
+                  <button
+                    type="button"
+                    onClick={() => setZoomLevel(prev => Math.min(prev + 0.25, 3))}
+                    className="w-8 h-8 flex items-center justify-center bg-blue-600 text-white rounded hover:bg-blue-700 font-bold text-lg"
+                    disabled={zoomLevel >= 3}
+                  >
+                    +
+                  </button>
+                  <div className="text-[10px] text-center text-gray-600 py-1">
+                    {Math.round(fitScale * zoomLevel * 100)}%
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setZoomLevel(prev => Math.max(prev - 0.25, 1))}
+                    className="w-8 h-8 flex items-center justify-center bg-blue-600 text-white rounded hover:bg-blue-700 font-bold text-lg"
+                    disabled={zoomLevel <= 1}
+                  >
+                    −
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setZoomLevel(1)}
+                    className="w-8 h-8 flex items-center justify-center bg-gray-600 text-white rounded hover:bg-gray-700 text-[10px]"
+                  >
+                    Fit
+                  </button>
+                </div>
+              )}
+              
+              {(!isMobile || containerWidth > 0) && (
+              <div 
+                className="bg-white border-2 border-gray-300" 
+                style={{ 
+                  width: isMobile ? BASE_CANVAS_WIDTH * mobileScale : CANVAS_WIDTH, 
+                  height: isMobile ? BASE_CANVAS_HEIGHT * mobileScale : CANVAS_HEIGHT,
+                  ...(isMobile && { flexShrink: 0 })
+                }}
+              >
                 <Stage
                   width={CANVAS_WIDTH}
                   height={CANVAS_HEIGHT}
+                  scaleX={isMobile ? mobileScale : 1}
+                  scaleY={isMobile ? mobileScale : 1}
+                  draggable={isMobile && zoomLevel > 1}
                   ref={stageRef}
                   onClick={handleStageClick}
                   onMouseDown={handleCanvasMouseDown}
@@ -553,6 +673,7 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
                   </Layer>
                 </Stage>
               </div>
+              )}
             </div>
 
             {/* Instructions */}
@@ -565,7 +686,7 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
               )}
               <br />
               <span>
-                Credits: Patch Symbols from PATCH &amp; TWEAK by Kim Bjørn and Chris Meyer, published by Bjooks, are licensed under{" "}
+              <strong>Credits:</strong>  Patch Symbols from PATCH &amp; TWEAK by Kim Bjørn and Chris Meyer, published by Bjooks, are licensed under{" "}
                 <a
                   href="https://creativecommons.org/licenses/by-nd/4.0/deed.en"
                   target="_blank"
