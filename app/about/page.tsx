@@ -7,6 +7,8 @@ import { GoogleReCaptchaProvider, useGoogleReCaptcha } from 'react-google-recapt
 import { Navbar } from '@/components/Navbar';
 import { Mail, Heart, Loader2, Copy, Check, Lock } from 'lucide-react';
 
+// Note: Since this is a client component, metadata is handled by a wrapper
+
 function ContactFormContent() {
   const { data: session, status } = useSession();
   const router = useRouter();

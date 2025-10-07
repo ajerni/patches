@@ -1,10 +1,48 @@
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { Music, FileText, Image, Volume2, Tags, Network } from "lucide-react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Home - Free Modular Synth Patch Documentation Tool",
+  description: "Document and organize your modular synthesizer patches with images, audio, visual diagrams, tags and detailed notes. Free online patch library for eurorack and modular synth enthusiasts.",
+  openGraph: {
+    title: "Synth Patch Library - Document Your Modular Synthesis Patches",
+    description: "Document and organize your modular synthesizer patches with images, audio, visual diagrams, tags and detailed notes.",
+    type: "website",
+  },
+};
 
 export default function Home() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Synth Patch Library",
+    "applicationCategory": "MultimediaApplication",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "description": "Free online tool for documenting and organizing modular synthesizer patches. Add images, audio, patch diagrams, tags, and detailed notes.",
+    "operatingSystem": "Any",
+    "permissions": "Free to use",
+    "featureList": [
+      "Patch documentation with titles and descriptions",
+      "Image uploads for patch cables and modules",
+      "Audio file embedding with player",
+      "Visual patch schema editor",
+      "Tag-based organization",
+      "Personal patch library management"
+    ]
+  };
+
   return (
     <div className="min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Navbar />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
