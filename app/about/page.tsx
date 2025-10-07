@@ -1,11 +1,15 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { GoogleReCaptchaProvider, useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { Navbar } from '@/components/Navbar';
-import { Mail, Heart, Loader2, Copy, Check } from 'lucide-react';
+import { Mail, Heart, Loader2, Copy, Check, Lock } from 'lucide-react';
 
 function ContactFormContent() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -16,6 +20,17 @@ function ContactFormContent() {
   const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
   const { executeRecaptcha } = useGoogleReCaptcha();
+
+  // Prepopulate name and email from session
+  useEffect(() => {
+    if (session?.user) {
+      setFormData(prev => ({
+        ...prev,
+        name: session.user.name || '',
+        email: session.user.email || ''
+      }));
+    }
+  }, [session]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +62,8 @@ function ContactFormContent() {
 
       if (response.ok) {
         setSubmitStatus({ type: 'success', message: 'Message sent successfully! We\'ll get back to you soon.' });
-        setFormData({ name: '', email: '', subject: '', message: '' });
+        // Keep name and email, only clear subject and message
+        setFormData(prev => ({ ...prev, subject: '', message: '' }));
       } else {
         setSubmitStatus({ type: 'error', message: data.error || 'Failed to send message. Please try again.' });
       }
@@ -108,15 +124,55 @@ function ContactFormContent() {
             <h2 className="text-2xl font-bold text-gray-900">Get in Touch</h2>
           </div>
           
-          {submitStatus && (
-            <div className={`mb-6 p-4 rounded-lg ${
-              submitStatus.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
-            }`}>
-              {submitStatus.message}
+          {status === 'loading' ? (
+            <div className="text-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
+              <p className="text-gray-600">Loading...</p>
             </div>
-          )}
+          ) : !session ? (
+            <div className="text-center py-8">
+              <div className="mb-6">
+                <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                  <Lock className="w-6 h-6 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Login Required</h3>
+                <p className="text-gray-600 mb-6">
+                  You need to be logged in to use the contact form.
+                </p>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
+                <button
+                  onClick={() => router.push('/login?callbackUrl=/about')}
+                  className="bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  Login
+                </button>
+                <button
+                  onClick={() => router.push('/register?callbackUrl=/about')}
+                  className="bg-white text-blue-600 py-2 px-6 rounded-lg border-2 border-blue-600 hover:bg-blue-50 transition-colors font-medium"
+                >
+                  Create Account
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {submitStatus && (
+                <div className={`mb-6 p-4 rounded-lg ${
+                  submitStatus.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+                }`}>
+                  {submitStatus.message}
+                </div>
+              )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-sm text-blue-800">
+                  <strong>Logged in as:</strong> {session.user.email}
+                </p>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
@@ -129,9 +185,11 @@ function ContactFormContent() {
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  disabled
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
                   placeholder="Your name"
                 />
+                <p className="mt-1 text-xs text-gray-500">From your account profile</p>
               </div>
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
@@ -144,9 +202,11 @@ function ContactFormContent() {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  disabled
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
                   placeholder="your.email@example.com"
                 />
+                <p className="mt-1 text-xs text-gray-500">From your account profile</p>
               </div>
             </div>
 
@@ -200,6 +260,8 @@ function ContactFormContent() {
               )}
             </button>
           </form>
+          </>
+          )}
         </div>
 
         {/* Support Section */}

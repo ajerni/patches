@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 // Rate limiting: simple in-memory store (for production, use Redis or similar)
 const recentSubmissions = new Map<string, number>();
@@ -27,6 +29,15 @@ function checkRateLimit(ip: string): boolean {
 
 export async function POST(request: NextRequest) {
   try {
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return NextResponse.json(
+        { error: 'You must be logged in to use the contact form.' },
+        { status: 401 }
+      );
+    }
+
     // Get IP for rate limiting
     const ip = request.headers.get('x-forwarded-for') || 
                request.headers.get('x-real-ip') || 
@@ -41,6 +52,14 @@ export async function POST(request: NextRequest) {
     }
 
     const { name, email, subject, message, recaptchaToken } = await request.json();
+
+    // Verify that the email matches the session email (security check)
+    if (email !== session.user.email) {
+      return NextResponse.json(
+        { error: 'Email mismatch. Please use your registered email address.' },
+        { status: 403 }
+      );
+    }
 
     // Verify reCAPTCHA token
     if (process.env.RECAPTCHA_SECRET_KEY) {

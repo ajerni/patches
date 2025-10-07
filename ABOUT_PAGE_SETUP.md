@@ -2,12 +2,25 @@
 
 The About page has been successfully added to your project with a contact form and donation options.
 
+## Page Structure
+
+- **Public sections** (visible to everyone):
+  - Mission statement
+  - PayPal donation button
+  - Cryptocurrency donation addresses
+
+- **Protected section** (requires login):
+  - Contact form ("Get in Touch")
+
 ## Features
 
 ### 1. Contact Form
-- **Location**: `/about`
+- **Location**: `/about` (Contact form section requires login)
 - **Features**:
-  - Name, email, subject, and message fields
+  - **Login required** - Users must be authenticated to use the contact form
+  - **Login prompt for guests** - Non-authenticated visitors see a login/register prompt in place of the form
+  - **Auto-populated fields** - Name and email prepopulated from user account
+  - Subject and message fields
   - Client-side validation
   - **Google reCAPTCHA v3 protection** (invisible spam protection)
   - Rate limiting (3 submissions per minute per IP)
@@ -19,10 +32,12 @@ The About page has been successfully added to your project with a contact form a
 ### 2. PayPal Donation
 - Pre-configured with your PayPal business ID
 - Ready to use - no additional setup needed
+- **Publicly visible** - No login required
 
 ### 3. Cryptocurrency Donations
-- Placeholder addresses for BTC, ETH, and USDT
-- **Action Required**: Replace placeholder addresses with your actual wallet addresses
+- Bitcoin and Ethereum addresses from environment variables
+- Copy-to-clipboard functionality
+- **Publicly visible** - No login required
 
 ## Setup Instructions
 
@@ -74,6 +89,11 @@ The "About" link has been added to:
 - **Desktop Menu**: Top navigation bar
 - **Mobile Menu**: Hamburger menu
 
+**Access Control**:
+- **Public sections**: Mission statement and donation options are visible to everyone
+- **Protected section**: Only the "Get in Touch" contact form requires login
+- **For non-authenticated users**: A login prompt is shown in place of the contact form
+
 ## Rate Limiting
 
 The contact form includes basic rate limiting:
@@ -84,11 +104,13 @@ The contact form includes basic rate limiting:
 ## Spam Protection
 
 Current protections:
-1. **Google reCAPTCHA v3** - Invisible bot detection with score-based verification
-2. Rate limiting (3 requests/minute/IP)
-3. Email format validation
-4. Basic spam keyword filtering
-5. Required field validation
+1. **Authentication required** - Only logged-in users can submit messages
+2. **Email verification** - Email must match the user's registered account
+3. **Google reCAPTCHA v3** - Invisible bot detection with score-based verification
+4. Rate limiting (3 requests/minute/IP)
+5. Email format validation
+6. Basic spam keyword filtering
+7. Required field validation
 
 **Note**: The form will only work after you configure reCAPTCHA keys in your `.env` file. See [RECAPTCHA_SETUP.md](./RECAPTCHA_SETUP.md) for setup instructions.
 
@@ -123,27 +145,42 @@ To add/remove fields, update:
 
 ## Testing
 
-1. **Contact Form**:
-   - Submit a test message
-   - Check if emails are received
-   - Verify auto-reply is sent
+1. **Public Access**:
+   - Visit `/about` while logged out - should see mission statement and donation options
+   - Contact form section should show a login prompt
 
-2. **PayPal**:
+2. **Authentication**:
+   - Login and visit `/about` - should see the same public content plus the contact form with prepopulated email
+
+3. **Contact Form**:
+   - Name and email fields should be disabled and auto-filled
+   - Submit a test message with subject and message
+   - Check if emails are received (both admin notification and auto-reply)
+   - Verify form clears only subject and message (keeping name/email)
+
+3. **PayPal**:
    - Click the donate button
    - Verify it redirects to PayPal correctly
 
-3. **Rate Limiting**:
+4. **Rate Limiting**:
    - Try submitting 4 messages quickly
    - Should see rate limit error on 4th attempt
 
+5. **Security**:
+   - Try accessing the contact API directly without being logged in - should get 401 error
+   - Verify you cannot submit with a different email than your account email
+
 ## Security Notes
 
+- ✅ **Authentication required** - Only logged-in users can access the contact form
+- ✅ **Email verification** - Server validates email matches user's account
 - ✅ **reCAPTCHA v3 implemented** - Invisible bot protection
 - ✅ Email credentials are stored in environment variables
-- ✅ Rate limiting prevents spam/abuse
+- ✅ Rate limiting prevents spam/abuse (3 per minute per IP)
 - ✅ Input validation and sanitization
 - ✅ All emails are sent from your verified Gmail account
 - ✅ Score-based spam detection (threshold: 0.5)
+- ✅ User accountability - All messages tracked to registered users
 
 ## Support
 
