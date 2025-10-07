@@ -7,5 +7,5 @@ Disallow: /api/
 Disallow: /dashboard/
 
 # Sitemap location
-Sitemap: https://synth-patch-library.com
+Sitemap: https://synth-patch-library.com/sitemap.xml
 
