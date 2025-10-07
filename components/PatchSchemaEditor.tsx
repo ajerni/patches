@@ -57,13 +57,37 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
   const [loadProgress, setLoadProgress] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [drawingCable, setDrawingCable] = useState<number[] | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(true);
   
   const stageRef = useRef<Konva.Stage>(null);
   const layerRef = useRef<Konva.Layer>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
 
-  const CANVAS_WIDTH = 1200;
-  const CANVAS_HEIGHT = 800;
+  const BASE_CANVAS_WIDTH = 1200;
+  const BASE_CANVAS_HEIGHT = 800;
+  
+  // Calculate responsive canvas size
+  const canvasScale = isMobile ? 0.3 : 1; // Scale to 30% on mobile
+  const CANVAS_WIDTH = BASE_CANVAS_WIDTH * canvasScale;
+  const CANVAS_HEIGHT = BASE_CANVAS_HEIGHT * canvasScale;
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+      // Auto-hide sidebar on mobile
+      if (window.innerWidth < 768) {
+        setShowSidebar(false);
+      } else {
+        setShowSidebar(true);
+      }
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Load SVG images from cache or preload them
   useEffect(() => {
@@ -257,30 +281,45 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-2xl flex flex-col max-h-[95vh] w-full max-w-[1600px]">
+    <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-2 sm:p-4">
+      <div className="bg-white rounded-lg shadow-2xl flex flex-col max-h-[98vh] sm:max-h-[95vh] w-full max-w-[1600px]">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-2xl font-bold text-gray-900">Patch Schema Editor</h2>
+        <div className="flex items-center justify-between p-2 sm:p-4 border-b">
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleExportImage}
-              className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Export PNG
-            </button>
+            {isMobile && (
+              <button
+                type="button"
+                onClick={() => setShowSidebar(!showSidebar)}
+                className="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+              >
+                {showSidebar ? 'Hide' : 'Show'} Symbols
+              </button>
+            )}
+            <h2 className="text-base sm:text-2xl font-bold text-gray-900">
+              {isMobile ? 'Schema' : 'Patch Schema Editor'}
+            </h2>
+          </div>
+          <div className="flex items-center gap-1 sm:gap-2">
+            {!isMobile && (
+              <button
+                type="button"
+                onClick={handleExportImage}
+                className="px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Export
+              </button>
+            )}
             <button
               type="button"
               onClick={handleSave}
-              className="px-4 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700"
+              className="px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm bg-green-600 text-white rounded hover:bg-green-700"
             >
-              Save Schema
+              Save
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm bg-gray-600 text-white rounded hover:bg-gray-700"
+              className="px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm bg-gray-600 text-white rounded hover:bg-gray-700"
             >
               Close
             </button>
@@ -289,11 +328,14 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
 
         <div className="flex flex-1 overflow-hidden">
           {/* Sidebar - Symbol Palette */}
-          <div className="w-64 border-r bg-gray-50 overflow-y-auto p-4">
-            <h3 className="font-bold mb-3 text-gray-900">Symbol Library</h3>
+          {showSidebar && (
+          <div className={`${isMobile ? 'w-32' : 'w-64'} border-r bg-gray-50 overflow-y-auto p-2 sm:p-4`}>
+            <h3 className={`font-bold mb-2 sm:mb-3 text-gray-900 ${isMobile ? 'text-xs' : 'text-base'}`}>
+              {isMobile ? 'Symbols' : 'Symbol Library'}
+            </h3>
             
             {/* Category Tabs */}
-            <div className="flex flex-col gap-1 mb-4">
+            <div className="flex flex-col gap-1 mb-2 sm:mb-4">
               {categories.map(cat => (
                 <button
                   key={cat}
@@ -303,19 +345,22 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
                     e.stopPropagation();
                     setSelectedSymbolCategory(cat);
                   }}
-                  className={`px-3 py-2 text-xs rounded text-left ${
+                  className={`px-1 sm:px-3 py-1 sm:py-2 text-[10px] sm:text-xs rounded text-left ${
                     selectedSymbolCategory === cat
                       ? 'bg-blue-600 text-white'
                       : 'bg-white text-gray-700 hover:bg-gray-100'
                   }`}
                 >
-                  {cat.replace('-', ' ').toUpperCase()}
+                  {isMobile 
+                    ? cat.split('-')[0].toUpperCase().slice(0, 5)
+                    : cat.replace('-', ' ').toUpperCase()
+                  }
                 </button>
               ))}
             </div>
 
             {/* Symbols Grid */}
-            <div className="grid grid-cols-2 gap-2">
+            <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-1 sm:gap-2`}>
               {getSymbolsByCategory(selectedSymbolCategory).map(symbol => (
                 <button
                   key={symbol.id}
@@ -325,37 +370,40 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
                     e.stopPropagation();
                     handleAddSymbol(symbol.id);
                   }}
-                  className="p-2 bg-white border rounded hover:bg-blue-50 hover:border-blue-500 transition-colors"
+                  className={`${isMobile ? 'p-1' : 'p-2'} bg-white border rounded hover:bg-blue-50 hover:border-blue-500 transition-colors`}
                   title={symbol.name}
                 >
                   {loadedImages.has(symbol.id) ? (
                     <img
                       src={symbol.svgPath}
                       alt={symbol.name}
-                      className="w-full h-16 object-contain"
+                      className={`w-full ${isMobile ? 'h-10' : 'h-16'} object-contain`}
                     />
                   ) : (
-                    <div className="w-full h-16 bg-gray-200 animate-pulse" />
+                    <div className={`w-full ${isMobile ? 'h-10' : 'h-16'} bg-gray-200 animate-pulse`} />
                   )}
-                  <div className="text-[10px] text-center mt-1 text-gray-700 truncate">
-                    {symbol.name}
-                  </div>
+                  {!isMobile && (
+                    <div className="text-[10px] text-center mt-1 text-gray-700 truncate">
+                      {symbol.name}
+                    </div>
+                  )}
                 </button>
               ))}
             </div>
           </div>
+          )}
 
           {/* Main Canvas Area */}
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col overflow-hidden">
             {/* Toolbar */}
-            <div className="flex items-center justify-between p-3 border-b bg-gray-50">
+            <div className={`flex flex-col sm:flex-row items-start sm:items-center ${isMobile ? 'justify-start gap-1 p-1' : 'justify-between p-3'} border-b bg-gray-50`}>
               {/* Tool Selection */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">Tool:</span>
+              <div className="flex items-center gap-1 sm:gap-2">
+                {!isMobile && <span className="text-sm font-medium text-gray-700">Tool:</span>}
                 <button
                   type="button"
                   onClick={() => setTool('select')}
-                  className={`px-3 py-1 text-sm rounded ${
+                  className={`px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-sm rounded ${
                     tool === 'select'
                       ? 'bg-blue-600 text-white'
                       : 'bg-white text-gray-700 hover:bg-gray-100'
@@ -366,26 +414,26 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
                 <button
                   type="button"
                   onClick={() => setTool('cable')}
-                  className={`px-3 py-1 text-sm rounded ${
+                  className={`px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-sm rounded ${
                     tool === 'cable'
                       ? 'bg-blue-600 text-white'
                       : 'bg-white text-gray-700 hover:bg-gray-100'
                   }`}
                 >
-                  Draw Cable
+                  {isMobile ? 'Cable' : 'Draw Cable'}
                 </button>
               </div>
 
               {/* Cable Color Selection */}
               {tool === 'cable' && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-700">Cable Type:</span>
+                <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+                  {!isMobile && <span className="text-xs sm:text-sm font-medium text-gray-700">Cable Type:</span>}
                   {Object.entries(CABLE_COLORS).map(([type, color]) => (
                     <button
                       key={type}
                       type="button"
                       onClick={() => setCableType(type as CableType)}
-                      className={`px-3 py-1 text-sm rounded border-2 ${
+                      className={`px-1.5 sm:px-3 py-0.5 sm:py-1 text-[9px] sm:text-sm rounded border-2 ${
                         cableType === type ? 'border-black' : 'border-transparent'
                       }`}
                       style={{ backgroundColor: color, color: type === 'audio' ? '#000' : '#fff' }}
@@ -398,27 +446,29 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
               )}
 
               {/* Actions */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2">
                 <button
                   type="button"
                   onClick={handleDelete}
                   disabled={!selectedId}
-                  className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Delete
                 </button>
-                <button
-                  type="button"
-                  onClick={handleClear}
-                  className="px-3 py-1 text-sm bg-gray-600 text-white rounded hover:bg-gray-700"
-                >
-                  Clear All
-                </button>
+                {!isMobile && (
+                  <button
+                    type="button"
+                    onClick={handleClear}
+                    className="px-3 py-1 text-sm bg-gray-600 text-white rounded hover:bg-gray-700"
+                  >
+                    Clear All
+                  </button>
+                )}
               </div>
             </div>
 
             {/* Canvas */}
-            <div className="flex-1 overflow-auto bg-gray-100 p-4">
+            <div className={`flex-1 overflow-auto bg-gray-100 ${isMobile ? 'p-1' : 'p-4'}`}>
               <div className="bg-white border-2 border-gray-300" style={{ width: CANVAS_WIDTH, height: CANVAS_HEIGHT }}>
                 <Stage
                   width={CANVAS_WIDTH}
