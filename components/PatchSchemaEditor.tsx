@@ -10,6 +10,12 @@ import {
   getSymbolsByCategory,
   SymbolDefinition 
 } from '@/lib/patchSchemaSymbols';
+import { 
+  preloadPatchSchemaImages, 
+  getCachedImages, 
+  areImagesLoaded, 
+  getLoadProgress 
+} from '@/lib/patchSchemaImageCache';
 
 export interface SchemaData {
   symbols: SchemaSymbol[];
@@ -47,6 +53,8 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
   const [cables, setCables] = useState<SchemaCable[]>(initialSchema?.cables || []);
   const [selectedSymbolCategory, setSelectedSymbolCategory] = useState<SymbolDefinition['category']>('audio-sources');
   const [loadedImages, setLoadedImages] = useState<Map<string, HTMLImageElement>>(new Map());
+  const [imagesLoading, setImagesLoading] = useState(!areImagesLoaded());
+  const [loadProgress, setLoadProgress] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [drawingCable, setDrawingCable] = useState<number[] | null>(null);
   
@@ -57,29 +65,35 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
   const CANVAS_WIDTH = 1200;
   const CANVAS_HEIGHT = 800;
 
-  // Load SVG images
+  // Load SVG images from cache or preload them
   useEffect(() => {
     const loadImages = async () => {
-      const imageMap = new Map<string, HTMLImageElement>();
-      
-      for (const symbol of PATCH_SCHEMA_SYMBOLS) {
-        const img = new window.Image();
-        img.crossOrigin = 'Anonymous';
-        img.src = symbol.svgPath;
-        
-        await new Promise<void>((resolve) => {
-          img.onload = () => {
-            imageMap.set(symbol.id, img);
-            resolve();
-          };
-          img.onerror = () => {
-            console.error(`Failed to load ${symbol.id}`);
-            resolve();
-          };
-        });
+      // Check if already loaded in cache
+      const cached = getCachedImages();
+      if (cached) {
+        setLoadedImages(cached);
+        setImagesLoading(false);
+        return;
       }
+
+      // Start preloading
+      setImagesLoading(true);
       
-      setLoadedImages(imageMap);
+      // Update progress periodically
+      const progressInterval = setInterval(() => {
+        setLoadProgress(getLoadProgress());
+      }, 100);
+
+      try {
+        const imageMap = await preloadPatchSchemaImages();
+        setLoadedImages(imageMap);
+        setLoadProgress(100);
+      } catch (error) {
+        console.error('Failed to load images:', error);
+      } finally {
+        clearInterval(progressInterval);
+        setImagesLoading(false);
+      }
     };
 
     loadImages();
@@ -210,6 +224,37 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
   };
 
   const categories: SymbolDefinition['category'][] = ['audio-sources', 'audio-modifiers', 'cv-sources', 'cv-modifiers'];
+
+  // Show loading screen while images are loading
+  if (imagesLoading) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full text-center">
+          <div className="mb-4">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Loading Patch Schema Symbols
+          </h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Loading {loadProgress}% ({Math.round((loadProgress / 100) * PATCH_SCHEMA_SYMBOLS.length)} / {PATCH_SCHEMA_SYMBOLS.length})
+          </p>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div 
+              className="bg-primary-600 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${loadProgress}%` }}
+            ></div>
+          </div>
+          <button
+            onClick={onClose}
+            className="mt-6 px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">

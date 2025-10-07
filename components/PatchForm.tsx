@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { X, Plus, Loader2, Network } from "lucide-react";
 import { ImageUpload } from "./ImageUpload";
 import { ModuleSelector } from "./ModuleSelector";
 import dynamic from "next/dynamic";
 import { SchemaData } from "./PatchSchemaEditor";
+import { preloadPatchSchemaImages } from "@/lib/patchSchemaImageCache";
 
 // Dynamically import the schema editor to avoid SSR issues with canvas
 const PatchSchemaEditor = dynamic(() => import("./PatchSchemaEditor"), {
@@ -57,6 +58,13 @@ export function PatchForm({ patch, isEdit = false }: PatchFormProps) {
 
   const [newTag, setNewTag] = useState("");
   const [newSound, setNewSound] = useState("");
+
+  // Preload patch schema images in the background when component mounts
+  useEffect(() => {
+    preloadPatchSchemaImages().catch((error) => {
+      console.error('Failed to preload patch schema images:', error);
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
