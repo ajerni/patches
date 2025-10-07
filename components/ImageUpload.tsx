@@ -159,7 +159,7 @@ export function ImageUpload({ images, onImagesChange, folder = "/patches" }: Ima
         <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
           <ImageIcon className="h-12 w-12 text-gray-400 mx-auto mb-2" />
           <p className="text-gray-600 text-sm">No images uploaded yet</p>
-          <p className="text-gray-500 text-xs mt-1">Click "Upload Image" to add patch photos</p>
+         
         </div>
       )}
     </div>

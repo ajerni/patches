@@ -176,7 +176,7 @@ export function PatchForm({ patch, isEdit = false }: PatchFormProps) {
           required
           rows={3}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-          placeholder="Describe what this patch does..."
+          placeholder="Describe the purpose of this patch..."
         />
       </div>
 
@@ -262,10 +262,10 @@ export function PatchForm({ patch, isEdit = false }: PatchFormProps) {
       {/* Images */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Patch Images
+          Images
         </label>
         <p className="text-sm text-gray-500 mb-3">
-          Upload images of your patch cables and module setup
+          Upload photos.
         </p>
         <ImageUpload images={images} onImagesChange={setImages} />
       </div>
@@ -273,10 +273,10 @@ export function PatchForm({ patch, isEdit = false }: PatchFormProps) {
       {/* Patch Schema Editor */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Patch Schema
+          Patch Diagram
         </label>
         <p className="text-sm text-gray-500 mb-3">
-          Create a visual diagram of your patch using module symbols and colored cables
+          Create a visual diagram of your patch.
         </p>
         <button
           type="button"
@@ -284,11 +284,11 @@ export function PatchForm({ patch, isEdit = false }: PatchFormProps) {
           className="flex items-center gap-2 px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition"
         >
           <Network className="h-5 w-5" />
-          {schema ? "Edit Schema" : "Create Schema"}
+          {schema ? "Edit Diagram" : "Create Diagram"}
         </button>
         {schema && (
           <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
-            ✓ Schema saved ({schema.symbols.length} symbols, {schema.cables.length} cables)
+            ✓ Diagram saved ({schema.symbols.length} symbols, {schema.cables.length} cables)
           </div>
         )}
       </div>
@@ -296,14 +296,11 @@ export function PatchForm({ patch, isEdit = false }: PatchFormProps) {
       {/* Sounds */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Audio Examples (hearthis.at)
+          Audio
         </label>
         <p className="text-sm text-gray-500 mb-3">
-          Paste hearthis.at URLs or embed codes. Audio will be embedded in the patch detail page.
-          <br />
-          <span className="text-xs">
-            Example: https://hearthis.at/username/trackname/ or https://app.hearthis.at/embed/12835855/...
-          </span>
+          Add URLs to your audio files here.
+         
         </p>
         <div className="flex gap-2 mb-2">
           <input

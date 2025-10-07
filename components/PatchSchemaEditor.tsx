@@ -71,20 +71,21 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
   const BASE_CANVAS_WIDTH = 1200;
   const BASE_CANVAS_HEIGHT = 800;
   
-  // Calculate responsive canvas size for desktop (unchanged)
+  // Canvas dimensions remain at base size
   const CANVAS_WIDTH = BASE_CANVAS_WIDTH;
   const CANVAS_HEIGHT = BASE_CANVAS_HEIGHT;
   
-  // Calculate scale to fit on mobile
+  // Calculate scale to fit available space (both mobile and desktop)
   const getFitScale = () => {
-    if (!isMobile || !containerWidth || !containerHeight) return 1;
-    const scaleX = (containerWidth - 20) / BASE_CANVAS_WIDTH; // 20px padding
-    const scaleY = (containerHeight - 20) / BASE_CANVAS_HEIGHT;
+    if (!containerWidth || !containerHeight) return 1;
+    const padding = isMobile ? 20 : 40; // More padding on desktop for nice margins
+    const scaleX = (containerWidth - padding) / BASE_CANVAS_WIDTH;
+    const scaleY = (containerHeight - padding) / BASE_CANVAS_HEIGHT;
     return Math.min(scaleX, scaleY, 1); // Never scale up beyond 100%
   };
   
   const fitScale = getFitScale();
-  const mobileScale = fitScale * zoomLevel;
+  const displayScale = isMobile ? fitScale * zoomLevel : fitScale;
 
   // Detect mobile screen size
   useEffect(() => {
@@ -99,10 +100,8 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Measure canvas container size (mobile only)
+  // Measure canvas container size (both mobile and desktop)
   useEffect(() => {
-    if (!isMobile) return;
-
     const updateContainerSize = () => {
       if (canvasContainerRef.current) {
         const rect = canvasContainerRef.current.getBoundingClientRect();
@@ -135,7 +134,7 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
         resizeObserver.disconnect();
       }
     };
-  }, [isMobile, showSidebar]); // Re-measure when sidebar visibility changes
+  }, [showSidebar]); // Re-measure when sidebar visibility changes
 
   // Reset zoom and re-measure when toggling sidebar on mobile
   useEffect(() => {
@@ -203,8 +202,13 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
 
   // Handle dragging symbols
   const handleSymbolDragEnd = (id: string, x: number, y: number) => {
+    // Clamp position to keep symbols within canvas bounds
+    const margin = 50; // Keep at least this much of the symbol visible
+    const clampedX = Math.max(margin, Math.min(x, CANVAS_WIDTH - margin));
+    const clampedY = Math.max(margin, Math.min(y, CANVAS_HEIGHT - margin));
+    
     setSymbols(prev => prev.map(sym => 
-      sym.id === id ? { ...sym, x, y } : sym
+      sym.id === id ? { ...sym, x: clampedX, y: clampedY } : sym
     ));
   };
 
@@ -231,7 +235,11 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
     const pos = stage.getPointerPosition();
     if (!pos) return;
 
-    setDrawingCable([pos.x, pos.y]);
+    // Adjust for scale - divide by displayScale to get actual canvas coordinates
+    const x = pos.x / displayScale;
+    const y = pos.y / displayScale;
+    
+    setDrawingCable([x, y]);
   };
 
   const handleCanvasMouseMove = (e: Konva.KonvaEventObject<MouseEvent>) => {
@@ -243,7 +251,11 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
     const pos = stage.getPointerPosition();
     if (!pos) return;
 
-    setDrawingCable([drawingCable[0], drawingCable[1], pos.x, pos.y]);
+    // Adjust for scale - divide by displayScale to get actual canvas coordinates
+    const x = pos.x / displayScale;
+    const y = pos.y / displayScale;
+
+    setDrawingCable([drawingCable[0], drawingCable[1], x, y]);
   };
 
   const handleCanvasMouseUp = () => {
@@ -363,15 +375,6 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
         {/* Header */}
         <div className="flex items-center justify-between p-2 sm:p-4 border-b">
           <div className="flex items-center gap-2">
-            {isMobile && (
-              <button
-                type="button"
-                onClick={() => setShowSidebar(!showSidebar)}
-                className="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-              >
-                {showSidebar ? 'Hide' : 'Show'} Symbols
-              </button>
-            )}
             <h2 className="text-base sm:text-2xl font-bold text-gray-900">
               {isMobile ? 'Schema' : 'Patch Schema Editor'}
             </h2>
@@ -406,13 +409,13 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
         <div className="flex flex-1 overflow-hidden">
           {/* Sidebar - Symbol Palette */}
           {showSidebar && (
-          <div className={`${isMobile ? 'w-40' : 'w-64'} border-r bg-gray-50 overflow-y-auto p-2 sm:p-4`}>
-            <h3 className={`font-bold mb-2 sm:mb-3 text-gray-900 ${isMobile ? 'text-xs' : 'text-base'}`}>
+          <div className={`${isMobile ? 'w-32' : 'w-64'} border-r bg-gray-50 overflow-y-auto ${isMobile ? 'p-1' : 'p-4'}`}>
+            <h3 className={`font-bold ${isMobile ? 'mb-1 text-[10px]' : 'mb-3 text-base'} text-gray-900`}>
               {isMobile ? 'Symbols' : 'Symbol Library'}
             </h3>
             
             {/* Category Tabs */}
-            <div className="flex flex-col gap-1 mb-2 sm:mb-4">
+            <div className={`flex flex-col ${isMobile ? 'gap-0.5 mb-1' : 'gap-1 mb-4'}`}>
               {categories.map(cat => (
                 <button
                   key={cat}
@@ -422,7 +425,7 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
                     e.stopPropagation();
                     setSelectedSymbolCategory(cat);
                   }}
-                  className={`px-1 sm:px-3 py-1 sm:py-2 text-[10px] sm:text-xs rounded text-left ${
+                  className={`${isMobile ? 'px-1 py-0.5 text-[8px]' : 'px-3 py-2 text-xs'} rounded text-left ${
                     selectedSymbolCategory === cat
                       ? 'bg-blue-600 text-white'
                       : 'bg-white text-gray-700 hover:bg-gray-100'
@@ -434,7 +437,7 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
             </div>
 
             {/* Symbols Grid */}
-            <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-1 sm:gap-2`}>
+            <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} ${isMobile ? 'gap-0.5' : 'gap-2'}`}>
               {getSymbolsByCategory(selectedSymbolCategory).map(symbol => (
                 <button
                   key={symbol.id}
@@ -444,17 +447,17 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
                     e.stopPropagation();
                     handleAddSymbol(symbol.id);
                   }}
-                  className={`${isMobile ? 'p-1' : 'p-2'} bg-white border rounded hover:bg-blue-50 hover:border-blue-500 transition-colors`}
+                  className={`${isMobile ? 'p-0.5' : 'p-2'} bg-white border rounded hover:bg-blue-50 hover:border-blue-500 transition-colors`}
                   title={symbol.name}
                 >
                   {loadedImages.has(symbol.id) ? (
                     <img
                       src={symbol.svgPath}
                       alt={symbol.name}
-                      className={`w-full ${isMobile ? 'h-10' : 'h-16'} object-contain`}
+                      className={`w-full ${isMobile ? 'h-8' : 'h-16'} object-contain`}
                     />
                   ) : (
-                    <div className={`w-full ${isMobile ? 'h-10' : 'h-16'} bg-gray-200 animate-pulse`} />
+                    <div className={`w-full ${isMobile ? 'h-8' : 'h-16'} bg-gray-200 animate-pulse`} />
                   )}
                   {!isMobile && (
                     <div className="text-[10px] text-center mt-1 text-gray-700 truncate">
@@ -544,26 +547,24 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
             {/* Canvas */}
             <div 
               ref={canvasContainerRef}
-              className={`flex-1 overflow-auto bg-gray-100 ${isMobile ? 'p-1 flex items-center justify-center' : 'p-4'} relative`}
+              className={`flex-1 bg-gray-100 ${isMobile ? 'p-1 overflow-auto' : 'p-4 overflow-hidden'} relative flex items-center justify-center`}
+              style={isMobile ? { WebkitOverflowScrolling: 'touch' } : undefined}
             >
               {/* Mobile Zoom Controls */}
               {isMobile && containerWidth > 0 && (
-                <div className="absolute top-2 right-2 z-10 flex flex-col gap-1 bg-white rounded-lg shadow-lg p-1 border border-gray-300">
+                <div className="absolute top-1 right-1 z-10 flex flex-col gap-0.5 bg-white/95 backdrop-blur-sm rounded shadow-lg p-0.5 border border-gray-200">
                   <button
                     type="button"
-                    onClick={() => setZoomLevel(prev => Math.min(prev + 0.25, 3))}
-                    className="w-8 h-8 flex items-center justify-center bg-blue-600 text-white rounded hover:bg-blue-700 font-bold text-lg"
+                    onClick={() => setZoomLevel(prev => Math.min(prev + 0.5, 3))}
+                    className="w-7 h-7 flex items-center justify-center bg-blue-600 text-white rounded hover:bg-blue-700 font-bold text-sm disabled:opacity-30 disabled:cursor-not-allowed"
                     disabled={zoomLevel >= 3}
                   >
                     +
                   </button>
-                  <div className="text-[10px] text-center text-gray-600 py-1">
-                    {Math.round(fitScale * zoomLevel * 100)}%
-                  </div>
                   <button
                     type="button"
-                    onClick={() => setZoomLevel(prev => Math.max(prev - 0.25, 1))}
-                    className="w-8 h-8 flex items-center justify-center bg-blue-600 text-white rounded hover:bg-blue-700 font-bold text-lg"
+                    onClick={() => setZoomLevel(prev => Math.max(prev - 0.5, 1))}
+                    className="w-7 h-7 flex items-center justify-center bg-blue-600 text-white rounded hover:bg-blue-700 font-bold text-sm disabled:opacity-30 disabled:cursor-not-allowed"
                     disabled={zoomLevel <= 1}
                   >
                     −
@@ -571,28 +572,28 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
                   <button
                     type="button"
                     onClick={() => setZoomLevel(1)}
-                    className="w-8 h-8 flex items-center justify-center bg-gray-600 text-white rounded hover:bg-gray-700 text-[10px]"
+                    className="w-7 h-7 flex items-center justify-center bg-gray-600 text-white rounded hover:bg-gray-700 text-[8px] font-semibold"
                   >
-                    Fit
+                    FIT
                   </button>
                 </div>
               )}
               
-              {(!isMobile || containerWidth > 0) && (
+              {containerWidth > 0 && (
               <div 
                 className="bg-white border-2 border-gray-300" 
                 style={{ 
-                  width: isMobile ? BASE_CANVAS_WIDTH * mobileScale : CANVAS_WIDTH, 
-                  height: isMobile ? BASE_CANVAS_HEIGHT * mobileScale : CANVAS_HEIGHT,
-                  ...(isMobile && { flexShrink: 0 })
+                  width: BASE_CANVAS_WIDTH * displayScale, 
+                  height: BASE_CANVAS_HEIGHT * displayScale,
+                  flexShrink: 0
                 }}
               >
                 <Stage
                   width={CANVAS_WIDTH}
                   height={CANVAS_HEIGHT}
-                  scaleX={isMobile ? mobileScale : 1}
-                  scaleY={isMobile ? mobileScale : 1}
-                  draggable={isMobile && zoomLevel > 1}
+                  scaleX={displayScale}
+                  scaleY={displayScale}
+                  draggable={false}
                   ref={stageRef}
                   onClick={handleStageClick}
                   onMouseDown={handleCanvasMouseDown}
@@ -663,6 +664,14 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
                           scaleY={symbol.scale}
                           rotation={symbol.rotation}
                           draggable={tool === 'select'}
+                          dragBoundFunc={(pos) => {
+                            // Keep symbols within canvas bounds during drag
+                            const margin = 50;
+                            return {
+                              x: Math.max(margin, Math.min(pos.x, CANVAS_WIDTH - margin)),
+                              y: Math.max(margin, Math.min(pos.y, CANVAS_HEIGHT - margin))
+                            };
+                          }}
                           onClick={() => setSelectedId(symbol.id)}
                           onDragEnd={(e) => handleSymbolDragEnd(symbol.id, e.target.x(), e.target.y())}
                           shadowColor={selectedId === symbol.id ? 'blue' : 'transparent'}
