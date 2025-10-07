@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { Music, LogOut, User, Menu, X } from "lucide-react";
+import { Music, LogOut, User, Menu, X, Info } from "lucide-react";
 
 export function Navbar() {
   const { data: session } = useSession();
@@ -38,6 +38,12 @@ export function Navbar() {
                 >
                   My Modules
                 </Link>
+                <Link
+                  href="/about"
+                  className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  About
+                </Link>
                 <div className="flex items-center space-x-2 text-sm text-gray-700">
                   <User className="h-4 w-4" />
                   <span>{session.user.name}</span>
@@ -52,6 +58,12 @@ export function Navbar() {
               </>
             ) : (
               <>
+                <Link
+                  href="/about"
+                  className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  About
+                </Link>
                 <Link
                   href="/login"
                   className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
@@ -109,6 +121,13 @@ export function Navbar() {
                 >
                   My Modules
                 </Link>
+                <Link
+                  href="/about"
+                  className="block text-gray-700 hover:text-primary-600 hover:bg-gray-50 px-3 py-2 rounded-md text-base font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  About
+                </Link>
                 <button
                   onClick={() => {
                     setMobileMenuOpen(false);
@@ -122,6 +141,13 @@ export function Navbar() {
               </>
             ) : (
               <>
+                <Link
+                  href="/about"
+                  className="block text-gray-700 hover:text-primary-600 hover:bg-gray-50 px-3 py-2 rounded-md text-base font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  About
+                </Link>
                 <Link
                   href="/login"
                   className="block text-gray-700 hover:text-primary-600 hover:bg-gray-50 px-3 py-2 rounded-md text-base font-medium"
