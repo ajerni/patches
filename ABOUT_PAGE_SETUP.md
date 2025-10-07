@@ -9,6 +9,7 @@ The About page has been successfully added to your project with a contact form a
 - **Features**:
   - Name, email, subject, and message fields
   - Client-side validation
+  - **Google reCAPTCHA v3 protection** (invisible spam protection)
   - Rate limiting (3 submissions per minute per IP)
   - Spam keyword filtering
   - Auto-reply to sender
@@ -48,18 +49,24 @@ NEXT_PUBLIC_ETH_ADDRESS="your-ethereum-address-here"
 - You can add more cryptocurrency options by editing `/app/about/page.tsx`
 - After adding addresses, restart your development server for changes to take effect
 
-### 3. Optional: Add Google reCAPTCHA (Enhanced Security)
+### 3. Configure Google reCAPTCHA v3 (Required for Contact Form)
 
-For additional spam protection, you can add Google reCAPTCHA v3:
+The contact form is protected by Google reCAPTCHA v3 (invisible spam protection). You need to configure it:
 
-1. Get reCAPTCHA keys from: https://www.google.com/recaptcha/admin
-2. Add to `.env`:
+1. **Get reCAPTCHA keys**: Visit https://www.google.com/recaptcha/admin/create
+2. **Select reCAPTCHA v3** (not v2)
+3. **Add domains**: 
+   - `localhost` (for development)
+   - Your production domain
+   - Your Vercel domain
+4. **Copy your keys** and add to `.env`:
+   ```env
+   NEXT_PUBLIC_RECAPTCHA_SITE_KEY="your-site-key-here"
+   RECAPTCHA_SECRET_KEY="your-secret-key-here"
    ```
-   NEXT_PUBLIC_RECAPTCHA_SITE_KEY=your_site_key
-   RECAPTCHA_SECRET_KEY=your_secret_key
-   ```
-3. Install package: `npm install react-google-recaptcha-v3`
-4. Update the contact form component to include reCAPTCHA verification
+5. **Restart your server**: The form will now validate submissions with reCAPTCHA
+
+**📖 Detailed Setup Guide**: See [RECAPTCHA_SETUP.md](./RECAPTCHA_SETUP.md) for complete instructions
 
 ## Navigation
 
@@ -77,10 +84,13 @@ The contact form includes basic rate limiting:
 ## Spam Protection
 
 Current protections:
-1. Rate limiting
-2. Email format validation
-3. Basic spam keyword filtering
-4. Required field validation
+1. **Google reCAPTCHA v3** - Invisible bot detection with score-based verification
+2. Rate limiting (3 requests/minute/IP)
+3. Email format validation
+4. Basic spam keyword filtering
+5. Required field validation
+
+**Note**: The form will only work after you configure reCAPTCHA keys in your `.env` file. See [RECAPTCHA_SETUP.md](./RECAPTCHA_SETUP.md) for setup instructions.
 
 ## Email Templates
 
@@ -128,11 +138,12 @@ To add/remove fields, update:
 
 ## Security Notes
 
-- Email credentials are stored in environment variables
-- Rate limiting prevents spam/abuse
-- Basic input validation and sanitization
-- Consider adding reCAPTCHA for production use
-- All emails are sent from your verified Gmail account
+- ✅ **reCAPTCHA v3 implemented** - Invisible bot protection
+- ✅ Email credentials are stored in environment variables
+- ✅ Rate limiting prevents spam/abuse
+- ✅ Input validation and sanitization
+- ✅ All emails are sent from your verified Gmail account
+- ✅ Score-based spam detection (threshold: 0.5)
 
 ## Support
 
@@ -144,9 +155,9 @@ If you encounter issues:
 
 ## Next Steps
 
-1. ✅ Add your cryptocurrency wallet addresses
-2. ✅ Update the mission statement to match your vision
-3. ✅ Test the contact form
-4. ✅ (Optional) Set up Google reCAPTCHA
+1. ✅ **Configure reCAPTCHA v3** (see [RECAPTCHA_SETUP.md](./RECAPTCHA_SETUP.md))
+2. ✅ Add your cryptocurrency wallet addresses to `.env`
+3. ✅ Update the mission statement to match your vision
+4. ✅ Test the contact form
 5. ✅ Deploy and share!
 

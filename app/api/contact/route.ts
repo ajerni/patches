@@ -40,7 +40,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, email, subject, message } = await request.json();
+    const { name, email, subject, message, recaptchaToken } = await request.json();
+
+    // Verify reCAPTCHA token
+    if (process.env.RECAPTCHA_SECRET_KEY) {
+      if (!recaptchaToken) {
+        return NextResponse.json(
+          { error: 'reCAPTCHA verification failed. Please try again.' },
+          { status: 400 }
+        );
+      }
+
+      try {
+        const recaptchaResponse = await fetch(
+          `https://www.google.com/recaptcha/api/siteverify`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptchaToken}`,
+          }
+        );
+
+        const recaptchaData = await recaptchaResponse.json();
+
+        // Check if verification was successful and score is acceptable
+        if (!recaptchaData.success || recaptchaData.score < 0.5) {
+          console.error('reCAPTCHA verification failed:', recaptchaData);
+          return NextResponse.json(
+            { error: 'reCAPTCHA verification failed. Please try again.' },
+            { status: 400 }
+          );
+        }
+
+        console.log('reCAPTCHA score:', recaptchaData.score);
+      } catch (error) {
+        console.error('reCAPTCHA verification error:', error);
+        return NextResponse.json(
+          { error: 'Failed to verify reCAPTCHA. Please try again.' },
+          { status: 500 }
+        );
+      }
+    }
 
     // Validate inputs
     if (!name || !email || !subject || !message) {

@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from 'react';
+import { GoogleReCaptchaProvider, useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { Navbar } from '@/components/Navbar';
 import { Mail, Heart, Loader2, Copy, Check } from 'lucide-react';
 
-export default function AboutPage() {
+function ContactFormContent() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -14,6 +15,7 @@ export default function AboutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
+  const { executeRecaptcha } = useGoogleReCaptcha();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,12 +23,24 @@ export default function AboutPage() {
     setSubmitStatus(null);
 
     try {
+      // Execute reCAPTCHA
+      if (!executeRecaptcha) {
+        setSubmitStatus({ type: 'error', message: 'reCAPTCHA not available. Please refresh the page.' });
+        setIsSubmitting(false);
+        return;
+      }
+
+      const recaptchaToken = await executeRecaptcha('contact_form');
+
       const response = await fetch('/api/contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          recaptchaToken,
+        }),
       });
 
       const data = await response.json();
@@ -209,13 +223,26 @@ export default function AboutPage() {
                 Support us with a donation through PayPal.
               </p>
               <form action="https://www.paypal.com/donate" method="post" target="_top">
-<input type="hidden" name="business" value="RPUSXUVPEDRWC" />
-<input type="hidden" name="no_recurring" value="0" />
-<input type="hidden" name="item_name" value="founder of Synth Patch Library" />
-<input type="hidden" name="currency_code" value="CHF" />
-<input type="image" src="https://www.paypalobjects.com/en_US/CH/i/btn/btn_donateCC_LG.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
-<img alt="" border="0" src="https://www.paypal.com/en_CH/i/scr/pixel.gif" width="1" height="1" />
-</form>
+                <input type="hidden" name="business" value="RPUSXUVPEDRWC" />
+                <input type="hidden" name="no_recurring" value="0" />
+                <input type="hidden" name="item_name" value="founder of Synth Patch Library" />
+                <input type="hidden" name="currency_code" value="CHF" />
+                <input 
+                  type="image" 
+                  src="https://www.paypalobjects.com/en_US/CH/i/btn/btn_donateCC_LG.gif"
+                  name="submit" 
+                  title="PayPal - The safer, easier way to pay online!" 
+                  alt="Donate with PayPal button"
+                  className="border-0 hover:opacity-80 transition-opacity"
+                />
+                <img 
+                  alt="" 
+                  src="https://www.paypal.com/en_CH/i/scr/pixel.gif" 
+                  width={1} 
+                  height={1}
+                  className="border-0"
+                />
+              </form>
 
             </div>
 
@@ -279,6 +306,27 @@ export default function AboutPage() {
       </div>
     </main>
     </>
+  );
+}
+
+export default function AboutPage() {
+  const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+
+  if (!recaptchaSiteKey) {
+    console.warn('reCAPTCHA site key not configured');
+  }
+
+  return (
+    <GoogleReCaptchaProvider
+      reCaptchaKey={recaptchaSiteKey || 'test-key'}
+      scriptProps={{
+        async: true,
+        defer: true,
+        appendTo: 'head',
+      }}
+    >
+      <ContactFormContent />
+    </GoogleReCaptchaProvider>
   );
 }
 
