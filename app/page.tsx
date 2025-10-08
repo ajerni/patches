@@ -94,13 +94,13 @@ export default function Home() {
           />
           <FeatureCard
             icon={<Network className="h-10 w-10 text-primary-600" />}
-            title="Patch Schemas"
+            title="Patch Diagrams"
             description="Use the patch schema editor to create visual diagrams of your patches"
           />
           <FeatureCard
             icon={<Music className="h-10 w-10 text-primary-600" />}
-            title="Personal Library"
-            description="Build your own collection of patches with full privacy. Keep your patches private or share them with the community."
+            title="Personal Modular Library"
+            description="Keep your documentation private or share patches with the community"
           />
           
         </div>

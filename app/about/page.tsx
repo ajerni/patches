@@ -114,7 +114,7 @@ function ContactFormContent() {
           </p>
           <p className="text-gray-700 mb-4">
             Whether you are just starting your modular journey or you are a seasoned patch designer, 
-            this web app is here to allow you to track your patches and enjoy your module collection to the fullest.
+            this web app is here to allow you to keep track of your patches and enjoy your modules collection to the fullest.
           </p>
         
         </div>
