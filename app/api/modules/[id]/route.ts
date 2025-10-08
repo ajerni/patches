@@ -191,19 +191,29 @@ export async function DELETE(
     // Add module images
     if (existingModule.images && Array.isArray(existingModule.images)) {
       imagesToDelete.push(...existingModule.images);
+      console.log(`🗑️ Found ${existingModule.images.length} module images to delete:`, existingModule.images);
     }
+
+    console.log(`🗑️ Total images to delete for module ${params.id}:`, imagesToDelete.length);
 
     // Delete the module from database first
     await prisma.module.delete({
       where: { id: params.id },
     });
 
+    console.log(`✅ Module ${params.id} deleted from database`);
+
     // Delete images from ImageKit (don't wait for completion, fire and forget)
     // This prevents delays in the API response
     if (imagesToDelete.length > 0) {
-      deleteImageKitFiles(imagesToDelete).catch(error => {
-        console.error('Failed to delete some ImageKit files for module:', params.id, error);
+      console.log(`🚀 Starting ImageKit cleanup for ${imagesToDelete.length} images...`);
+      deleteImageKitFiles(imagesToDelete).then(() => {
+        console.log(`✅ ImageKit cleanup completed for module ${params.id}`);
+      }).catch(error => {
+        console.error(`❌ Failed to delete some ImageKit files for module ${params.id}:`, error);
       });
+    } else {
+      console.log(`ℹ️ No images to delete for module ${params.id}`);
     }
 
     return NextResponse.json({ success: true });

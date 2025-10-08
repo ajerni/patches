@@ -21,7 +21,8 @@ export function ImageUpload({ images, onImagesChange, folder = "/patches" }: Ima
   // Debug ImageKit configuration
   console.log("🔧 ImageKit config:", {
     publicKey: publicKey ? `${publicKey.substring(0, 8)}...` : 'MISSING',
-    urlEndpoint: urlEndpoint || 'MISSING'
+    urlEndpoint: urlEndpoint || 'MISSING',
+    folder: folder
   });
   
   // Authenticator function that fetches auth params from our API
