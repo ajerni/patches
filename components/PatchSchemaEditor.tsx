@@ -226,8 +226,13 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
   };
 
   // Handle canvas mouse events for cable drawing
-  const handleCanvasMouseDown = (e: Konva.KonvaEventObject<MouseEvent>) => {
+  const handleCanvasMouseDown = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
     if (tool !== 'cable') return;
+    
+    // Prevent default touch behavior to avoid conflicts
+    if (e.evt.type === 'touchstart') {
+      e.evt.preventDefault();
+    }
     
     const stage = e.target.getStage();
     if (!stage) return;
@@ -242,8 +247,13 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
     setDrawingCable([x, y]);
   };
 
-  const handleCanvasMouseMove = (e: Konva.KonvaEventObject<MouseEvent>) => {
+  const handleCanvasMouseMove = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
     if (tool !== 'cable' || !drawingCable) return;
+    
+    // Prevent default touch behavior to avoid conflicts
+    if (e.evt.type === 'touchmove') {
+      e.evt.preventDefault();
+    }
     
     const stage = e.target.getStage();
     if (!stage) return;
@@ -258,7 +268,12 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
     setDrawingCable([drawingCable[0], drawingCable[1], x, y]);
   };
 
-  const handleCanvasMouseUp = () => {
+  const handleCanvasMouseUp = (e?: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+    // Prevent default touch behavior to avoid conflicts
+    if (e && e.evt.type === 'touchend') {
+      e.evt.preventDefault();
+    }
+    
     if (tool !== 'cable' || !drawingCable || drawingCable.length < 4) {
       setDrawingCable(null);
       return;
@@ -599,6 +614,9 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
                   onMouseDown={handleCanvasMouseDown}
                   onMouseMove={handleCanvasMouseMove}
                   onMouseUp={handleCanvasMouseUp}
+                  onTouchStart={handleCanvasMouseDown}
+                  onTouchMove={handleCanvasMouseMove}
+                  onTouchEnd={handleCanvasMouseUp}
                 >
                   <Layer ref={layerRef}>
                     {/* Grid background */}
