@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { deleteImageKitFiles } from "@/lib/imagekit";
 
 const moduleSchema = z.object({
   manufacturer: z.string().min(1, "Manufacturer is required"),
@@ -113,10 +114,27 @@ export async function PUT(
     const body = await req.json();
     const data = moduleSchema.parse(body);
 
+    // Identify images that will be removed
+    const imagesToDelete: string[] = [];
+    
+    // Check for removed module images
+    if (existingModule.images && Array.isArray(existingModule.images)) {
+      const newImages = data.images || [];
+      const removedImages = existingModule.images.filter(img => !newImages.includes(img));
+      imagesToDelete.push(...removedImages);
+    }
+
     const module = await prisma.module.update({
       where: { id: params.id },
       data,
     });
+
+    // Delete removed images from ImageKit (fire-and-forget)
+    if (imagesToDelete.length > 0) {
+      deleteImageKitFiles(imagesToDelete).catch(error => {
+        console.error('Failed to delete some ImageKit files during module update:', params.id, error);
+      });
+    }
 
     return NextResponse.json(module);
   } catch (error) {
@@ -167,12 +185,30 @@ export async function DELETE(
       );
     }
 
+    // Collect all ImageKit URLs to delete
+    const imagesToDelete: string[] = [];
+    
+    // Add module images
+    if (existingModule.images && Array.isArray(existingModule.images)) {
+      imagesToDelete.push(...existingModule.images);
+    }
+
+    // Delete the module from database first
     await prisma.module.delete({
       where: { id: params.id },
     });
 
+    // Delete images from ImageKit (don't wait for completion, fire and forget)
+    // This prevents delays in the API response
+    if (imagesToDelete.length > 0) {
+      deleteImageKitFiles(imagesToDelete).catch(error => {
+        console.error('Failed to delete some ImageKit files for module:', params.id, error);
+      });
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error('Error deleting module:', error);
     return NextResponse.json(
       { error: "Failed to delete module" },
       { status: 500 }

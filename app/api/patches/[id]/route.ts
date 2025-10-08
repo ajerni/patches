@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { deleteImageKitFiles } from "@/lib/imagekit";
 
 const patchSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -109,6 +110,26 @@ export async function PUT(
     const body = await req.json();
     const { moduleIds, ...patchData } = patchSchema.parse(body);
 
+    // Identify images that will be removed
+    const imagesToDelete: string[] = [];
+    
+    // Check for removed patch images
+    if (existingPatch.images && Array.isArray(existingPatch.images)) {
+      const newImages = patchData.images || [];
+      const removedImages = existingPatch.images.filter(img => !newImages.includes(img));
+      imagesToDelete.push(...removedImages);
+    }
+    
+    // Check for removed schema image
+    if (existingPatch.schema && typeof existingPatch.schema === 'object') {
+      const existingSchema = existingPatch.schema as any;
+      const newSchema = patchData.schema;
+      
+      if (existingSchema.imageUrl && (!newSchema || newSchema.imageUrl !== existingSchema.imageUrl)) {
+        imagesToDelete.push(existingSchema.imageUrl);
+      }
+    }
+
     // Update patch with optional module relationships
     const patchUpdateData: any = {
       ...patchData,
@@ -140,6 +161,13 @@ export async function PUT(
         },
       },
     });
+
+    // Delete removed images from ImageKit (fire-and-forget)
+    if (imagesToDelete.length > 0) {
+      deleteImageKitFiles(imagesToDelete).catch(error => {
+        console.error('Failed to delete some ImageKit files during patch update:', params.id, error);
+      });
+    }
 
     return NextResponse.json(patch);
   } catch (error) {
@@ -195,12 +223,38 @@ export async function DELETE(
       );
     }
 
+    // Collect all ImageKit URLs to delete
+    const imagesToDelete: string[] = [];
+    
+    // Add patch images
+    if (existingPatch.images && Array.isArray(existingPatch.images)) {
+      imagesToDelete.push(...existingPatch.images);
+    }
+    
+    // Add schema image if it exists (patch schema might contain an imageUrl)
+    if (existingPatch.schema && typeof existingPatch.schema === 'object') {
+      const schema = existingPatch.schema as any;
+      if (schema.imageUrl) {
+        imagesToDelete.push(schema.imageUrl);
+      }
+    }
+
+    // Delete the patch from database first
     await prisma.patch.delete({
       where: { id: params.id },
     });
 
+    // Delete images from ImageKit (don't wait for completion, fire and forget)
+    // This prevents delays in the API response
+    if (imagesToDelete.length > 0) {
+      deleteImageKitFiles(imagesToDelete).catch(error => {
+        console.error('Failed to delete some ImageKit files for patch:', params.id, error);
+      });
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error('Error deleting patch:', error);
     return NextResponse.json(
       { error: "Failed to delete patch" },
       { status: 500 }
