@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 import { Music, FileText, Image, Volume2, Tags, Network } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -122,11 +123,7 @@ export default function Home() {
         </div>
       </main>
 
-      <footer className="bg-gray-800 text-white mt-12 sm:mt-16 py-6 sm:py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-sm sm:text-base">&copy; 2025 Synth Patch Library. All rights reserved.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

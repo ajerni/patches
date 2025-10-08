@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { GoogleReCaptchaProvider, useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { Navbar } from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
 import { Mail, Heart, Loader2, Copy, Check, Lock } from 'lucide-react';
 
 // Note: Since this is a client component, metadata is handled by a wrapper
@@ -369,6 +370,7 @@ function ContactFormContent() {
         </div>
       </div>
     </main>
+    <Footer />
     </>
   );
 }
