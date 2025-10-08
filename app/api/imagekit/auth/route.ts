@@ -3,11 +3,11 @@ import { imagekit } from "@/lib/imagekit";
 
 export async function GET() {
   try {
-    // Set expiration to 10 minutes from now (in seconds)
+    // Set expiration to 5 minutes from now (in seconds)
     // ImageKit requires expire to be less than 1 hour in the future
-    // Using 10 minutes to be extra conservative with time synchronization
+    // Using 5 minutes to be very conservative with time synchronization
     const currentTimestamp = Math.floor(Date.now() / 1000);
-    const expire = currentTimestamp + (10 * 60); // Current time + 10 minutes (600 seconds)
+    const expire = currentTimestamp + (2 * 60); // Current time + 2 minutes (120 seconds)
     
     // Generate a unique token for each request to avoid collisions
     // Using crypto.randomUUID() for V4 UUIDs as suggested by ImageKit
@@ -19,6 +19,9 @@ export async function GET() {
     );
     
     console.log(`🔐 Generated new ImageKit auth token: ${uniqueToken.substring(0, 8)}...`);
+    console.log(`⏰ Expire timestamp: ${expire} (${new Date(expire * 1000).toISOString()})`);
+    console.log(`⏰ Current timestamp: ${currentTimestamp} (${new Date(currentTimestamp * 1000).toISOString()})`);
+    console.log(`⏰ Time until expire: ${expire - currentTimestamp} seconds`);
     
     return NextResponse.json(authenticationParameters);
   } catch (error) {
