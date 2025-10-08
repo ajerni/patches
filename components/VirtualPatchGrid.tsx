@@ -1,10 +1,30 @@
 "use client";
 
-import { FixedSizeGrid as Grid } from 'react-window';
-import { SharedPatch } from '@/app/shared/page';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Music, Calendar, User, Tag } from 'lucide-react';
+import { Music, Calendar, User } from 'lucide-react';
+
+interface SharedPatch {
+  id: string;
+  title: string;
+  description: string;
+  tags: string[];
+  images: string[];
+  sounds: string[];
+  private: boolean;
+  createdAt: string;
+  updatedAt: string;
+  user: {
+    id: string;
+    name: string;
+  };
+  moduleCount: number;
+  modules: Array<{
+    id: string;
+    name: string;
+    manufacturer: string;
+  }>;
+}
 
 interface VirtualPatchGridProps {
   patches: SharedPatch[];
@@ -13,16 +33,6 @@ interface VirtualPatchGridProps {
   loadNextPage: () => void;
   width: number;
   height: number;
-}
-
-interface GridItemProps {
-  columnIndex: number;
-  rowIndex: number;
-  style: React.CSSProperties;
-  data: {
-    patches: SharedPatch[];
-    columnsPerRow: number;
-  };
 }
 
 const PatchCard = ({ patch }: { patch: SharedPatch }) => (
@@ -100,22 +110,6 @@ const PatchCard = ({ patch }: { patch: SharedPatch }) => (
   </div>
 );
 
-const GridItem = ({ columnIndex, rowIndex, style, data }: GridItemProps) => {
-  const { patches, columnsPerRow } = data;
-  const patchIndex = rowIndex * columnsPerRow + columnIndex;
-  const patch = patches[patchIndex];
-
-  if (!patch) {
-    return <div style={style} />;
-  }
-
-  return (
-    <div style={style}>
-      <PatchCard patch={patch} />
-    </div>
-  );
-};
-
 export function VirtualPatchGrid({ 
   patches, 
   hasNextPage, 
@@ -133,31 +127,26 @@ export function VirtualPatchGrid({
   };
 
   const columnsPerRow = getColumnsPerRow(width);
-  const rowCount = Math.ceil(patches.length / columnsPerRow);
-  const itemHeight = 280; // Height of each patch card
-
+  
   // Load more when scrolling near the end
-  const handleItemsRendered = ({ visibleRowStopIndex }: { visibleRowStopIndex: number }) => {
-    if (hasNextPage && !isNextPageLoading && visibleRowStopIndex >= rowCount - 2) {
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    if (scrollHeight - scrollTop <= clientHeight * 1.5 && hasNextPage && !isNextPageLoading) {
       loadNextPage();
     }
   };
 
   return (
-    <div className="w-full">
-      <Grid
-        columnCount={columnsPerRow}
-        columnWidth={width / columnsPerRow}
-        height={height}
-        rowCount={rowCount}
-        rowHeight={itemHeight}
-        width={width}
-        itemData={{ patches, columnsPerRow }}
-        onItemsRendered={handleItemsRendered}
-        overscanRowCount={2} // Render 2 extra rows for smooth scrolling
-      >
-        {GridItem}
-      </Grid>
+    <div 
+      className="w-full overflow-auto"
+      style={{ height: height }}
+      onScroll={handleScroll}
+    >
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 p-4">
+        {patches.map((patch) => (
+          <PatchCard key={patch.id} patch={patch} />
+        ))}
+      </div>
       
       {isNextPageLoading && (
         <div className="flex justify-center py-8">
