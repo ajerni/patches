@@ -115,11 +115,25 @@ export async function deleteImageKitFile(url: string): Promise<boolean> {
     });
 
     console.log(`🔍 Search results for "${fileName}": ${searchResults.length} files found`);
+    
+    // Debug: Log the search results to see what we got
+    if (searchResults.length > 0) {
+      console.log(`🔍 Search result details:`, searchResults.map(f => ({
+        name: f.name,
+        fileId: f.fileId,
+        url: f.url,
+        path: f.filePath
+      })));
+    }
 
     // Find the exact match by comparing full URLs
     const matchingFile = searchResults.find(file => {
       // ImageKit file.url should match our stored URL
-      return file.url === url || file.url === decodeURIComponent(url);
+      const matches = file.url === url || file.url === decodeURIComponent(url);
+      if (matches) {
+        console.log(`🎯 Exact URL match found: ${file.url} === ${url}`);
+      }
+      return matches;
     });
 
     if (matchingFile && matchingFile.fileId) {
@@ -134,30 +148,56 @@ export async function deleteImageKitFile(url: string): Promise<boolean> {
       return true;
     }
 
-    // If exact match not found, try searching by the full path
-    const filePath = urlObj.pathname;
-    console.log(`🔍 Trying path search for: ${filePath}`);
+    // If exact match not found, try a more flexible search
+    console.log(`🔍 No exact URL match found, trying flexible search...`);
     
-    const pathSearch = await retryWithBackoff(async () => {
-      return await imagekit.listFiles({
-        path: filePath.substring(0, filePath.lastIndexOf('/')),
-        limit: 100,
-      });
+    // Try to find by filename in the search results (less strict matching)
+    const flexibleMatch = searchResults.find(file => {
+      const fileUrl = file.url || '';
+      const fileNameFromUrl = fileUrl.split('/').pop() || '';
+      return fileNameFromUrl === fileName || fileNameFromUrl.includes(fileName);
     });
 
-    console.log(`🔍 Path search results: ${pathSearch.length} files found`);
-
-    const fileByPath = pathSearch.find(f => f.name === fileName);
-    if (fileByPath && fileByPath.fileId) {
-      console.log(`🎯 Found file by path, deleting fileId: ${fileByPath.fileId}`);
+    if (flexibleMatch && flexibleMatch.fileId) {
+      console.log(`🎯 Found flexible match, deleting fileId: ${flexibleMatch.fileId}`);
       
       // Delete with retry logic
       await retryWithBackoff(async () => {
-        return await imagekit.deleteFile(fileByPath.fileId);
+        return await imagekit.deleteFile(flexibleMatch.fileId);
       });
       
-      console.log('✅ Successfully deleted ImageKit file by path:', fileName, 'fileId:', fileByPath.fileId);
+      console.log('✅ Successfully deleted ImageKit file by flexible match:', fileName, 'fileId:', flexibleMatch.fileId);
       return true;
+    }
+
+    // If still not found, try searching by the full path (but with better error handling)
+    const filePath = urlObj.pathname;
+    console.log(`🔍 Trying path search for: ${filePath}`);
+    
+    try {
+      const pathSearch = await retryWithBackoff(async () => {
+        return await imagekit.listFiles({
+          path: filePath.substring(0, filePath.lastIndexOf('/')),
+          limit: 100,
+        });
+      });
+
+      console.log(`🔍 Path search results: ${pathSearch.length} files found`);
+
+      const fileByPath = pathSearch.find(f => f.name === fileName);
+      if (fileByPath && fileByPath.fileId) {
+        console.log(`🎯 Found file by path, deleting fileId: ${fileByPath.fileId}`);
+        
+        // Delete with retry logic
+        await retryWithBackoff(async () => {
+          return await imagekit.deleteFile(fileByPath.fileId);
+        });
+        
+        console.log('✅ Successfully deleted ImageKit file by path:', fileName, 'fileId:', fileByPath.fileId);
+        return true;
+      }
+    } catch (pathSearchError) {
+      console.warn('⚠️ Path search failed, but continuing with other methods:', pathSearchError);
     }
 
     console.warn('⚠️ Could not find file to delete on ImageKit:', url);
