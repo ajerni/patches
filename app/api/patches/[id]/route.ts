@@ -229,6 +229,7 @@ export async function DELETE(
     // Add patch images
     if (existingPatch.images && Array.isArray(existingPatch.images)) {
       imagesToDelete.push(...existingPatch.images);
+      console.log(`🗑️ Found ${existingPatch.images.length} patch images to delete:`, existingPatch.images);
     }
     
     // Add schema image if it exists (patch schema might contain an imageUrl)
@@ -236,20 +237,30 @@ export async function DELETE(
       const schema = existingPatch.schema as any;
       if (schema.imageUrl) {
         imagesToDelete.push(schema.imageUrl);
+        console.log('🗑️ Found schema image to delete:', schema.imageUrl);
       }
     }
+
+    console.log(`🗑️ Total images to delete for patch ${params.id}:`, imagesToDelete.length);
 
     // Delete the patch from database first
     await prisma.patch.delete({
       where: { id: params.id },
     });
 
+    console.log(`✅ Patch ${params.id} deleted from database`);
+
     // Delete images from ImageKit (don't wait for completion, fire and forget)
     // This prevents delays in the API response
     if (imagesToDelete.length > 0) {
-      deleteImageKitFiles(imagesToDelete).catch(error => {
-        console.error('Failed to delete some ImageKit files for patch:', params.id, error);
+      console.log(`🚀 Starting ImageKit cleanup for ${imagesToDelete.length} images...`);
+      deleteImageKitFiles(imagesToDelete).then(() => {
+        console.log(`✅ ImageKit cleanup completed for patch ${params.id}`);
+      }).catch(error => {
+        console.error(`❌ Failed to delete some ImageKit files for patch ${params.id}:`, error);
       });
+    } else {
+      console.log(`ℹ️ No images to delete for patch ${params.id}`);
     }
 
     return NextResponse.json({ success: true });
