@@ -27,6 +27,7 @@ interface Patch {
   sounds: string[];
   schema?: any;
   private: boolean;
+  userId: string;
   patchModules?: Array<{
     module: {
       id: string;
@@ -45,7 +46,7 @@ interface Patch {
 }
 
 export default function PatchDetailPage({ params }: { params: { id: string } }) {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [patch, setPatch] = useState<Patch | null>(null);
   const [loading, setLoading] = useState(true);
@@ -136,15 +137,23 @@ export default function PatchDetailPage({ params }: { params: { id: string } }) 
                   </div>
                   <span className="hidden sm:inline">•</span>
                   <span>by {patch.user.name}</span>
+                  {session?.user?.id !== patch.userId && (
+                    <>
+                      <span className="hidden sm:inline">•</span>
+                      <span className="text-green-200">Shared Patch</span>
+                    </>
+                  )}
                 </div>
               </div>
-              <Link
-                href={`/patches/${patch.id}/edit`}
-                className="flex items-center justify-center space-x-2 bg-white text-primary-600 hover:bg-primary-50 px-3 sm:px-4 py-2 rounded-lg transition font-medium text-sm sm:text-base w-full sm:w-auto"
-              >
-                <Edit className="h-4 w-4" />
-                <span>Edit</span>
-              </Link>
+              {session?.user?.id === patch.userId && (
+                <Link
+                  href={`/patches/${patch.id}/edit`}
+                  className="flex items-center justify-center space-x-2 bg-white text-primary-600 hover:bg-primary-50 px-3 sm:px-4 py-2 rounded-lg transition font-medium text-sm sm:text-base w-full sm:w-auto"
+                >
+                  <Edit className="h-4 w-4" />
+                  <span>Edit</span>
+                </Link>
+              )}
             </div>
 
             {/* Tags */}

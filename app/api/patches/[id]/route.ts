@@ -59,7 +59,8 @@ export async function GET(
       );
     }
 
-    if (patch.userId !== session.user.id) {
+    // Allow viewing if it's the user's own patch OR if it's a public patch
+    if (patch.userId !== session.user.id && (patch as any).private) {
       return NextResponse.json(
         { error: "Forbidden" },
         { status: 403 }

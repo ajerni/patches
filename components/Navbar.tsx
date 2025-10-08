@@ -26,12 +26,19 @@ export function Navbar() {
           <div className="hidden md:flex items-center space-x-4">
             {session ? (
               <>
+                     <Link
+                  href="/shared"
+                  className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Shared Patches
+                </Link>
                 <Link
                   href="/dashboard"
                   className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
                 >
                   My Patches
                 </Link>
+           
                 <Link
                   href="/modules"
                   className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
@@ -113,6 +120,13 @@ export function Navbar() {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   My Patches
+                </Link>
+                <Link
+                  href="/shared"
+                  className="block text-gray-700 hover:text-primary-600 hover:bg-gray-50 px-3 py-2 rounded-md text-base font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Shared Patches
                 </Link>
                 <Link
                   href="/modules"

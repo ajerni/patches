@@ -42,3 +42,6 @@ prisma/migrations/
 #paypal
 paypal_donate_button_form
 
+# docs
+shared_patches_concept.docx
+
