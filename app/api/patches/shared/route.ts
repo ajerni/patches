@@ -116,7 +116,7 @@ export async function GET(request: Request) {
         }
         
         const rawPatches = await prisma.$queryRaw`
-          SELECT DISTINCT p.*, u.name as user_name, u.id as user_id
+          SELECT DISTINCT p.*, u.name as user_name, u.id as user_id, p.like_count
           FROM patches_patches p
           JOIN patches_users u ON p."userId" = u.id
           WHERE p.private = false
@@ -129,8 +129,8 @@ export async function GET(request: Request) {
               WHERE LOWER(tag) LIKE LOWER(${searchPattern})
             )
             OR EXISTS (
-              SELECT 1 FROM patch_modules pm
-              JOIN modules m ON pm."moduleId" = m.id
+              SELECT 1 FROM patches_patch_modules pm
+              JOIN patches_modules m ON pm."moduleId" = m.id
               WHERE pm."patchId" = p.id
               AND (
                 LOWER(m.name) LIKE LOWER(${searchPattern})
@@ -295,6 +295,7 @@ export async function GET(request: Request) {
         images: patch.images,
         sounds: patch.sounds,
         private: patch.private,
+        likeCount: patch.likeCount || 0,
         createdAt: patch.createdAt,
         updatedAt: patch.updatedAt,
         user: user,

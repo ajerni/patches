@@ -7,7 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Navbar } from "@/components/Navbar";
 import { VirtualPatchGrid } from "@/components/VirtualPatchGrid";
-import { Search, Music, Calendar, User, Tag, Loader2, SortAsc, SortDesc } from "lucide-react";
+import { Search, Music, Calendar, User, Tag, Loader2, SortAsc, SortDesc, Heart } from "lucide-react";
 
 interface SharedPatch {
   id: string;
@@ -17,6 +17,7 @@ interface SharedPatch {
   images: string[];
   sounds: string[];
   private: boolean;
+  likeCount: number;
   createdAt: string;
   updatedAt: string;
   user: {
@@ -55,6 +56,8 @@ export default function SharedPatchesPage() {
   const [useVirtualScrolling, setUseVirtualScrolling] = useState(false);
   const [containerDimensions, setContainerDimensions] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
+  const [likedPatches, setLikedPatches] = useState<Set<string>>(new Set());
+  const [likingPatches, setLikingPatches] = useState<Set<string>>(new Set());
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -170,6 +173,57 @@ export default function SharedPatchesPage() {
     } else {
       setSortBy(newSortBy);
       setSortOrder('desc');
+    }
+  };
+
+  // Handle like/unlike
+  const handleLike = async (patchId: string, isLiked: boolean) => {
+    if (likingPatches.has(patchId)) return; // Prevent double-clicks
+    
+    setLikingPatches(prev => new Set(prev).add(patchId));
+    
+    try {
+      const method = isLiked ? 'DELETE' : 'POST';
+      const response = await fetch(`/api/patches/${patchId}/like`, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update like status');
+      }
+
+      const data = await response.json();
+      
+      // Update the patch in the patches array
+      setPatches(prev => prev.map(patch => 
+        patch.id === patchId 
+          ? { ...patch, likeCount: data.likeCount }
+          : patch
+      ));
+
+      // Update liked patches set
+      setLikedPatches(prev => {
+        const newSet = new Set(prev);
+        if (isLiked) {
+          newSet.delete(patchId);
+        } else {
+          newSet.add(patchId);
+        }
+        return newSet;
+      });
+
+    } catch (error) {
+      console.error('Error updating like status:', error);
+      // You could show a toast notification here
+    } finally {
+      setLikingPatches(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(patchId);
+        return newSet;
+      });
     }
   };
 
@@ -290,45 +344,51 @@ export default function SharedPatchesPage() {
                 loadNextPage={loadMore}
                 width={containerDimensions.width}
                 height={containerDimensions.height || 600}
+                likedPatches={likedPatches}
+                likingPatches={likingPatches}
+                onLike={handleLike}
               />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                 {patches.map((patch) => (
-                  <Link
+                  <div
                     key={patch.id}
-                    href={`/patches/${patch.id}`}
                     className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-200 group"
                   >
-                    {/* Patch Image */}
-                    {patch.images.length > 0 ? (
-                      <div className="relative w-full h-32 overflow-hidden">
-                        <Image
-                          src={patch.images[0]}
-                          alt={patch.title}
-                          fill
-                          className="object-cover group-hover:scale-105 transition duration-300"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-full h-32 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
-                        <Music className="h-8 w-8 text-primary-600" />
-                      </div>
-                    )}
+                    <Link href={`/patches/${patch.id}`} className="block">
+                      {/* Patch Image */}
+                      {patch.images.length > 0 ? (
+                        <div className="relative w-full h-32 overflow-hidden">
+                          <Image
+                            src={patch.images[0]}
+                            alt={patch.title}
+                            fill
+                            className="object-cover group-hover:scale-105 transition duration-300"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-full h-32 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
+                          <Music className="h-8 w-8 text-primary-600" />
+                        </div>
+                      )}
+                    </Link>
 
                     {/* Patch Info */}
                     <div className="p-4">
-                      <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2 group-hover:text-primary-600 transition">
-                        {patch.title}
-                      </h3>
-                      
-                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                        <User className="h-3 w-3" />
-                        <span className="truncate">{patch.user.name}</span>
-                      </div>
-                      
-                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                        {patch.description}
-                      </p>
+                      <Link href={`/patches/${patch.id}`} className="block">
+                        <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2 group-hover:text-primary-600 transition">
+                          {patch.title}
+                        </h3>
+                        
+                        <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                          <User className="h-3 w-3" />
+                          <span className="truncate">{patch.user.name}</span>
+                        </div>
+                        
+                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                          {patch.description}
+                        </p>
+                      </Link>
 
                       {/* Tags */}
                       {patch.tags.length > 0 && (
@@ -349,18 +409,42 @@ export default function SharedPatchesPage() {
                         </div>
                       )}
 
-                      {/* Footer */}
-                      <div className="flex items-center justify-between text-xs text-gray-500">
-                        <div className="flex items-center gap-1">
-                          <span>🎵 {patch.moduleCount} modules</span>
+                      {/* Footer with Like Button */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3 text-xs text-gray-500">
+                          <div className="flex items-center gap-1">
+                            <span>🎵 {patch.moduleCount} modules</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            <span>{new Date(patch.updatedAt).toLocaleDateString()}</span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          <span>{new Date(patch.updatedAt).toLocaleDateString()}</span>
-                        </div>
+                        
+                        {/* Like Button */}
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleLike(patch.id, likedPatches.has(patch.id));
+                          }}
+                          disabled={likingPatches.has(patch.id)}
+                          className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-colors ${
+                            likedPatches.has(patch.id)
+                              ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                              : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                          } ${likingPatches.has(patch.id) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                        >
+                          <Heart 
+                            className={`h-3 w-3 ${
+                              likedPatches.has(patch.id) ? 'fill-current' : ''
+                            }`} 
+                          />
+                          <span>{patch.likeCount}</span>
+                        </button>
                       </div>
                     </div>
-                  </Link>
+                  </div>
                 ))}
               </div>
             )}

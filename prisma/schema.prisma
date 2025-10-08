@@ -19,6 +19,7 @@ model User {
   patches               Patch[]
   modules               Module[]
   passwordResetTokens   PasswordResetToken[]
+  patchLikes            PatchLike[]
   
   @@map("patches_users")
 }
@@ -34,14 +35,17 @@ model Patch {
   sounds        String[]      @default([])
   schema        Json?
   private       Boolean       @default(true)
+  likeCount     Int           @default(0) @map("like_count")
   userId        String
   user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   patchModules  PatchModule[]
+  likes         PatchLike[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   
   @@index([userId])
   @@index([private])
+  @@index([likeCount])
   @@map("patches_patches")
 }
 
@@ -89,5 +93,20 @@ model PasswordResetToken {
   @@index([userId])
   @@index([expiresAt])
   @@map("patches_password_reset_tokens")
+}
+
+model PatchLike {
+  id        String   @id @default(cuid())
+  patchId   String   @map("patch_id")
+  userId    String   @map("user_id")
+  patch     Patch    @relation(fields: [patchId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  @@unique([patchId, userId])
+  @@index([patchId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("patches_patch_likes")
 }
 

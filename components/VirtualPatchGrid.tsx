@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Music, Calendar, User } from 'lucide-react';
+import { Music, Calendar, User, Heart } from 'lucide-react';
 
 interface SharedPatch {
   id: string;
@@ -12,6 +12,7 @@ interface SharedPatch {
   images: string[];
   sounds: string[];
   private: boolean;
+  likeCount: number;
   createdAt: string;
   updatedAt: string;
   user: {
@@ -33,12 +34,25 @@ interface VirtualPatchGridProps {
   loadNextPage: () => void;
   width: number;
   height: number;
+  likedPatches: Set<string>;
+  likingPatches: Set<string>;
+  onLike: (patchId: string, isLiked: boolean) => void;
 }
 
-const PatchCard = ({ patch }: { patch: SharedPatch }) => (
+const PatchCard = ({ 
+  patch, 
+  likedPatches, 
+  likingPatches, 
+  onLike 
+}: { 
+  patch: SharedPatch;
+  likedPatches: Set<string>;
+  likingPatches: Set<string>;
+  onLike: (patchId: string, isLiked: boolean) => void;
+}) => (
   <div className="h-full p-2">
-    <Link href={`/patches/${patch.id}`}>
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition group h-full flex flex-col">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition group h-full flex flex-col">
+      <Link href={`/patches/${patch.id}`} className="block">
         {/* Image */}
         {patch.images.length > 0 ? (
           <div className="relative w-full h-32 overflow-hidden">
@@ -54,9 +68,11 @@ const PatchCard = ({ patch }: { patch: SharedPatch }) => (
             <Music className="h-8 w-8 text-primary-600" />
           </div>
         )}
+      </Link>
 
-        {/* Content */}
-        <div className="p-3 flex-1 flex flex-col">
+      {/* Content */}
+      <div className="p-3 flex-1 flex flex-col">
+        <Link href={`/patches/${patch.id}`} className="block">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-semibold text-gray-900 line-clamp-1">
               {patch.title}
@@ -73,28 +89,30 @@ const PatchCard = ({ patch }: { patch: SharedPatch }) => (
           <p className="text-gray-600 text-xs mb-2 line-clamp-2 flex-1">
             {patch.description}
           </p>
+        </Link>
 
-          {/* Tags */}
-          {patch.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-2">
-              {patch.tags.slice(0, 2).map((tag) => (
-                <span
-                  key={tag}
-                  className="px-1.5 py-0.5 bg-primary-100 text-primary-700 text-xs rounded-full"
-                >
-                  {tag}
-                </span>
-              ))}
-              {patch.tags.length > 2 && (
-                <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
-                  +{patch.tags.length - 2}
-                </span>
-              )}
-            </div>
-          )}
+        {/* Tags */}
+        {patch.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-2">
+            {patch.tags.slice(0, 2).map((tag) => (
+              <span
+                key={tag}
+                className="px-1.5 py-0.5 bg-primary-100 text-primary-700 text-xs rounded-full"
+              >
+                {tag}
+              </span>
+            ))}
+            {patch.tags.length > 2 && (
+              <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
+                +{patch.tags.length - 2}
+              </span>
+            )}
+          </div>
+        )}
 
-          {/* Footer */}
-          <div className="flex items-center justify-between text-xs text-gray-500 mt-auto">
+        {/* Footer with Like Button */}
+        <div className="flex items-center justify-between mt-auto">
+          <div className="flex items-center gap-2 text-xs text-gray-500">
             <div className="flex items-center space-x-1">
               <User className="h-3 w-3" />
               <span className="truncate">{patch.user.name}</span>
@@ -104,9 +122,31 @@ const PatchCard = ({ patch }: { patch: SharedPatch }) => (
               <span>{new Date(patch.updatedAt).toLocaleDateString()}</span>
             </div>
           </div>
+          
+          {/* Like Button */}
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onLike(patch.id, likedPatches.has(patch.id));
+            }}
+            disabled={likingPatches.has(patch.id)}
+            className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-colors ${
+              likedPatches.has(patch.id)
+                ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+            } ${likingPatches.has(patch.id) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+          >
+            <Heart 
+              className={`h-3 w-3 ${
+                likedPatches.has(patch.id) ? 'fill-current' : ''
+              }`} 
+            />
+            <span>{patch.likeCount}</span>
+          </button>
         </div>
       </div>
-    </Link>
+    </div>
   </div>
 );
 
@@ -116,7 +156,10 @@ export function VirtualPatchGrid({
   isNextPageLoading, 
   loadNextPage, 
   width, 
-  height 
+  height,
+  likedPatches,
+  likingPatches,
+  onLike
 }: VirtualPatchGridProps) {
   // Calculate responsive columns
   const getColumnsPerRow = (containerWidth: number) => {
@@ -144,7 +187,13 @@ export function VirtualPatchGrid({
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 p-4">
         {patches.map((patch) => (
-          <PatchCard key={patch.id} patch={patch} />
+          <PatchCard 
+            key={patch.id} 
+            patch={patch} 
+            likedPatches={likedPatches}
+            likingPatches={likingPatches}
+            onLike={onLike}
+          />
         ))}
       </div>
       
