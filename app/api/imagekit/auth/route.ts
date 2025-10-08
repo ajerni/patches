@@ -9,10 +9,16 @@ export async function GET() {
     const currentTimestamp = Math.floor(Date.now() / 1000);
     const expire = currentTimestamp + (10 * 60); // Current time + 10 minutes (600 seconds)
     
+    // Generate a unique token for each request to avoid collisions
+    // Using crypto.randomUUID() for V4 UUIDs as suggested by ImageKit
+    const uniqueToken = crypto.randomUUID();
+    
     const authenticationParameters = imagekit.getAuthenticationParameters(
-      undefined, // token (optional)
-      expire     // expire time in seconds
+      uniqueToken, // unique token for each request
+      expire       // expire time in seconds
     );
+    
+    console.log(`🔐 Generated new ImageKit auth token: ${uniqueToken.substring(0, 8)}...`);
     
     return NextResponse.json(authenticationParameters);
   } catch (error) {
