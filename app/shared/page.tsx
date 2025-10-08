@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Navbar } from "@/components/Navbar";
+import { VirtualPatchGrid } from "@/components/VirtualPatchGrid";
 import { Search, Music, Calendar, User, Tag, Loader2, SortAsc, SortDesc } from "lucide-react";
 
 interface SharedPatch {
@@ -30,12 +31,13 @@ interface SharedPatch {
   }>;
 }
 
-interface PaginationInfo {
+// Infinite scroll with virtual scrolling for large datasets
+interface PaginationState {
   page: number;
-  limit: number;
-  totalCount: number;
-  totalPages: number;
+  limit: number; // 20-50 items per page
   hasMore: boolean;
+  total: number;
+  nextCursor?: string | null;
 }
 
 export default function SharedPatchesPage() {
@@ -48,8 +50,11 @@ export default function SharedPatchesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<'date' | 'alphabetical'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [pagination, setPagination] = useState<PaginationInfo | null>(null);
+  const [pagination, setPagination] = useState<PaginationState | null>(null);
   const [error, setError] = useState("");
+  const [useVirtualScrolling, setUseVirtualScrolling] = useState(false);
+  const [containerDimensions, setContainerDimensions] = useState({ width: 0, height: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -59,7 +64,7 @@ export default function SharedPatchesPage() {
   }, [status, router]);
 
   // Fetch patches function
-  const fetchPatches = useCallback(async (page: number = 1, reset: boolean = true, showLoading: boolean = true, searchQuery?: string) => {
+  const fetchPatches = useCallback(async (page: number = 1, reset: boolean = true, showLoading: boolean = true, searchQuery?: string, cursor?: string) => {
     try {
       if (page === 1 && showLoading) {
         setLoading(true);
@@ -75,6 +80,11 @@ export default function SharedPatchesPage() {
         sortBy,
         sortOrder,
       });
+      
+      // Use cursor for better performance with large datasets
+      if (cursor) {
+        params.append('cursor', cursor);
+      }
       
       const query = searchQuery !== undefined ? searchQuery : searchTerm;
       if (query.trim()) {
@@ -107,6 +117,25 @@ export default function SharedPatchesPage() {
     }
   }, [sortBy, sortOrder]);
 
+  // Handle container dimensions and virtual scrolling decision
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setContainerDimensions({ width: rect.width, height: rect.height });
+      }
+    };
+
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
+
+  // Decide when to use virtual scrolling (when we have many patches)
+  useEffect(() => {
+    setUseVirtualScrolling(patches.length > 100);
+  }, [patches.length]);
+
   // Initial load
   useEffect(() => {
     if (status === "authenticated") {
@@ -127,10 +156,10 @@ export default function SharedPatchesPage() {
     return () => clearTimeout(timeoutId);
   }, [searchTerm, sortBy, sortOrder, status, fetchPatches]);
 
-  // Load more patches
+  // Load more patches using cursor-based pagination
   const loadMore = () => {
-    if (pagination?.hasMore && !loadingMore) {
-      fetchPatches(pagination.page + 1, false);
+    if (pagination?.hasMore && !loadingMore && pagination?.nextCursor) {
+      fetchPatches(pagination.page + 1, false, false, undefined, pagination.nextCursor);
     }
   };
 
@@ -172,7 +201,7 @@ export default function SharedPatchesPage() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Shared Patches</h1>
           <p className="text-gray-600">
             Discover amazing patches shared by the community
-            {pagination && ` • ${pagination.totalCount} patches available`}
+            {pagination && ` • ${pagination.total} patches available`}
           </p>
         </div>
 
@@ -189,7 +218,7 @@ export default function SharedPatchesPage() {
                 )}
                 <input
                   type="text"
-                  placeholder="Search patches, tags, or creators..."
+                  placeholder="Search patches, tags, creators, or modules..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
@@ -248,81 +277,98 @@ export default function SharedPatchesPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-            {patches.map((patch) => (
-              <Link
-                key={patch.id}
-                href={`/patches/${patch.id}`}
-                className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-200 group"
-              >
-                {/* Patch Image */}
-                {patch.images.length > 0 ? (
-                  <div className="relative w-full h-32 overflow-hidden">
-                    <Image
-                      src={patch.images[0]}
-                      alt={patch.title}
-                      fill
-                      className="object-cover group-hover:scale-105 transition duration-300"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-full h-32 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
-                    <Music className="h-8 w-8 text-primary-600" />
-                  </div>
-                )}
+          <div 
+            ref={containerRef}
+            className="w-full"
+            style={{ height: useVirtualScrolling ? '600px' : 'auto' }}
+          >
+            {useVirtualScrolling ? (
+              <VirtualPatchGrid
+                patches={patches}
+                hasNextPage={pagination?.hasMore || false}
+                isNextPageLoading={loadingMore}
+                loadNextPage={loadMore}
+                width={containerDimensions.width}
+                height={containerDimensions.height || 600}
+              />
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                {patches.map((patch) => (
+                  <Link
+                    key={patch.id}
+                    href={`/patches/${patch.id}`}
+                    className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-200 group"
+                  >
+                    {/* Patch Image */}
+                    {patch.images.length > 0 ? (
+                      <div className="relative w-full h-32 overflow-hidden">
+                        <Image
+                          src={patch.images[0]}
+                          alt={patch.title}
+                          fill
+                          className="object-cover group-hover:scale-105 transition duration-300"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-full h-32 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
+                        <Music className="h-8 w-8 text-primary-600" />
+                      </div>
+                    )}
 
-                {/* Patch Info */}
-                <div className="p-4">
-                  <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2 group-hover:text-primary-600 transition">
-                    {patch.title}
-                  </h3>
-                  
-                  <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                    <User className="h-3 w-3" />
-                    <span className="truncate">{patch.user.name}</span>
-                  </div>
-                  
-                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                    {patch.description}
-                  </p>
+                    {/* Patch Info */}
+                    <div className="p-4">
+                      <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2 group-hover:text-primary-600 transition">
+                        {patch.title}
+                      </h3>
+                      
+                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                        <User className="h-3 w-3" />
+                        <span className="truncate">{patch.user.name}</span>
+                      </div>
+                      
+                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                        {patch.description}
+                      </p>
 
-                  {/* Tags */}
-                  {patch.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {patch.tags.slice(0, 2).map((tag) => (
-                        <span
-                          key={tag}
-                          className="px-2 py-0.5 bg-primary-100 text-primary-700 rounded text-xs"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                      {patch.tags.length > 2 && (
-                        <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
-                          +{patch.tags.length - 2}
-                        </span>
+                      {/* Tags */}
+                      {patch.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          {patch.tags.slice(0, 2).map((tag) => (
+                            <span
+                              key={tag}
+                              className="px-2 py-0.5 bg-primary-100 text-primary-700 rounded text-xs"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                          {patch.tags.length > 2 && (
+                            <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
+                              +{patch.tags.length - 2}
+                            </span>
+                          )}
+                        </div>
                       )}
-                    </div>
-                  )}
 
-                  {/* Footer */}
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <div className="flex items-center gap-1">
-                      <span>🎵 {patch.moduleCount} modules</span>
+                      {/* Footer */}
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <div className="flex items-center gap-1">
+                          <span>🎵 {patch.moduleCount} modules</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          <span>{new Date(patch.updatedAt).toLocaleDateString()}</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      <span>{new Date(patch.updatedAt).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
-        {/* Load More Button */}
-        {pagination?.hasMore && (
+        {/* Load More Button - Only show when not using virtual scrolling */}
+        {pagination?.hasMore && !useVirtualScrolling && (
           <div className="text-center mt-8">
             <button
               onClick={loadMore}

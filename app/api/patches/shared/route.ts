@@ -20,8 +20,9 @@ export async function GET(request: Request) {
     const sortOrder = (searchParams.get('sortOrder') as 'asc' | 'desc') || 'desc';
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
+    const cursor = searchParams.get('cursor') || undefined; // For cursor-based pagination
     
-    // Calculate offset for pagination
+    // Calculate offset for pagination (fallback for page-based)
     const offset = (page - 1) * limit;
     
     // Build where clause for public patches
@@ -57,6 +58,28 @@ export async function GET(request: Request) {
             },
           },
         },
+        {
+          patchModules: {
+            some: {
+              module: {
+                OR: [
+                  {
+                    name: {
+                      contains: search,
+                      mode: 'insensitive',
+                    },
+                  },
+                  {
+                    manufacturer: {
+                      contains: search,
+                      mode: 'insensitive',
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
       ];
     }
     
@@ -80,6 +103,18 @@ export async function GET(request: Request) {
         const orderByField = sortBy === 'alphabetical' ? 'p.title' : 'p."updatedAt"';
         const orderDirection = sortOrder === 'desc' ? 'DESC' : 'ASC';
         
+        // Build cursor condition for better performance with large datasets
+        let cursorCondition = '';
+        if (cursor) {
+          if (sortBy === 'alphabetical') {
+            const comparison = sortOrder === 'desc' ? '<' : '>';
+            cursorCondition = `AND p.title ${comparison} '${cursor}'`;
+          } else {
+            const comparison = sortOrder === 'desc' ? '<' : '>';
+            cursorCondition = `AND p."updatedAt" ${comparison} '${cursor}'`;
+          }
+        }
+        
         const rawPatches = await prisma.$queryRaw`
           SELECT DISTINCT p.*, u.name as user_name, u.id as user_id
           FROM patches_patches p
@@ -93,9 +128,19 @@ export async function GET(request: Request) {
               SELECT 1 FROM unnest(p.tags) AS tag
               WHERE LOWER(tag) LIKE LOWER(${searchPattern})
             )
+            OR EXISTS (
+              SELECT 1 FROM patch_modules pm
+              JOIN modules m ON pm."moduleId" = m.id
+              WHERE pm."patchId" = p.id
+              AND (
+                LOWER(m.name) LIKE LOWER(${searchPattern})
+                OR LOWER(m.manufacturer) LIKE LOWER(${searchPattern})
+              )
+            )
           )
+          ${cursorCondition}
           ORDER BY ${orderByField} ${orderDirection}
-          LIMIT ${limit} OFFSET ${offset}
+          LIMIT ${limit}
         `;
 
       const rawCount = await prisma.$queryRaw`
@@ -110,6 +155,15 @@ export async function GET(request: Request) {
           OR EXISTS (
             SELECT 1 FROM unnest(p.tags) AS tag
             WHERE LOWER(tag) LIKE LOWER(${searchPattern})
+          )
+          OR EXISTS (
+            SELECT 1 FROM patch_modules pm
+            JOIN modules m ON pm."moduleId" = m.id
+            WHERE pm."patchId" = p.id
+            AND (
+              LOWER(m.name) LIKE LOWER(${searchPattern})
+              OR LOWER(m.manufacturer) LIKE LOWER(${searchPattern})
+            )
           )
         )
       `;
@@ -249,14 +303,25 @@ export async function GET(request: Request) {
       };
     });
     
+    // Calculate next cursor for cursor-based pagination
+    let nextCursor = null;
+    if (patches.length === limit && patches.length > 0) {
+      const lastPatch = patches[patches.length - 1];
+      if (sortBy === 'alphabetical') {
+        nextCursor = lastPatch.title;
+      } else {
+        nextCursor = lastPatch.updatedAt.toISOString();
+      }
+    }
+    
     return NextResponse.json({
       patches: transformedPatches,
       pagination: {
         page,
         limit,
-        totalCount,
-        totalPages,
+        total: totalCount, // Changed from totalCount to total
         hasMore,
+        nextCursor, // Add cursor for next page
       },
     });
   } catch (error) {
