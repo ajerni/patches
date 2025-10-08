@@ -3,9 +3,11 @@ import { imagekit } from "@/lib/imagekit";
 
 export async function GET() {
   try {
-    // Set expiration to 1 hour from now (in seconds)
-    // This ensures it's valid even with slight time differences between servers
-    const expire = Math.floor(Date.now() / 1000) + 3600; // Current time + 1 hour
+    // Set expiration to 30 minutes from now (in seconds)
+    // ImageKit requires expire to be less than 1 hour in the future
+    // Using 30 minutes to avoid any edge cases with time synchronization
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    const expire = currentTimestamp + (30 * 60); // Current time + 30 minutes (1800 seconds)
     
     const authenticationParameters = imagekit.getAuthenticationParameters(
       undefined, // token (optional)
