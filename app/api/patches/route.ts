@@ -14,6 +14,7 @@ const patchSchema = z.object({
   sounds: z.array(z.string()).default([]),
   moduleIds: z.array(z.string()).default([]),
   schema: z.any().optional(),
+  private: z.boolean().default(true),
 });
 
 // GET all patches for the authenticated user

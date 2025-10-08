@@ -16,6 +16,7 @@ interface Patch {
   tags: string[];
   images: string[];
   sounds: string[];
+  private: boolean;
 }
 
 export default function EditPatchPage({ params }: { params: { id: string } }) {

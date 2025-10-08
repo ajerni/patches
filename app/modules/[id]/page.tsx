@@ -22,6 +22,7 @@ interface Module {
       description: string;
       tags: string[];
       images: string[];
+      private: boolean;
     };
   }>;
   createdAt: string;
@@ -220,9 +221,18 @@ export default function ModuleDetailPage({ params }: { params: { id: string } })
                     
                     {/* Patch Info */}
                     <div>
-                      <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition line-clamp-2">
-                        {patch.title}
-                      </h3>
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition line-clamp-2">
+                          {patch.title}
+                        </h3>
+                        <span className={`px-1.5 py-0.5 text-xs font-medium rounded-full ${
+                          patch.private 
+                            ? 'bg-gray-100 text-gray-600' 
+                            : 'bg-green-100 text-green-700'
+                        }`}>
+                          {patch.private ? 'Private' : 'Public'}
+                        </span>
+                      </div>
                       <p className="text-sm text-gray-600 mt-1 line-clamp-2">{patch.description}</p>
                       {patch.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-2">

@@ -16,6 +16,7 @@ interface Patch {
   tags: string[];
   images: string[];
   sounds: string[];
+  private: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -194,9 +195,18 @@ export default function DashboardPage() {
                 </Link>
 
                 <div className="p-6">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    {patch.title}
-                  </h3>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-xl font-semibold text-gray-900">
+                      {patch.title}
+                    </h3>
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                      patch.private 
+                        ? 'bg-gray-100 text-gray-600' 
+                        : 'bg-green-100 text-green-700'
+                    }`}>
+                      {patch.private ? 'Private' : 'Public'}
+                    </span>
+                  </div>
                   <p className="text-gray-600 mb-4 line-clamp-2">
                     {patch.description}
                   </p>

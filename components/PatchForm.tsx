@@ -26,6 +26,7 @@ interface PatchFormProps {
     images: string[];
     sounds: string[];
     schema?: any;
+    private?: boolean;
     patchModules?: Array<{
       module: {
         id: string;
@@ -55,6 +56,7 @@ export function PatchForm({ patch, isEdit = false }: PatchFormProps) {
   );
   const [schema, setSchema] = useState<SchemaData | null>(patch?.schema || null);
   const [showSchemaEditor, setShowSchemaEditor] = useState(false);
+  const [isPrivate, setIsPrivate] = useState(patch?.private ?? true);
 
   const [newTag, setNewTag] = useState("");
   const [newSound, setNewSound] = useState("");
@@ -81,6 +83,7 @@ export function PatchForm({ patch, isEdit = false }: PatchFormProps) {
       sounds,
       moduleIds,
       schema,
+      private: isPrivate,
     };
 
     try {
@@ -178,6 +181,44 @@ export function PatchForm({ patch, isEdit = false }: PatchFormProps) {
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           placeholder="Describe the purpose of this patch..."
         />
+      </div>
+
+      {/* Privacy Setting */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Visibility
+        </label>
+        <div className="flex items-center space-x-4">
+          <label className="flex items-center">
+            <input
+              type="radio"
+              name="privacy"
+              checked={isPrivate}
+              onChange={() => setIsPrivate(true)}
+              className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+            />
+            <span className="ml-2 text-sm text-gray-700">
+              <span className="font-medium">Private</span>
+              <span className="text-gray-500"> - Only you can see this patch</span>
+            </span>
+          </label>
+          <label className="flex items-center">
+            <input
+              type="radio"
+              name="privacy"
+              checked={!isPrivate}
+              onChange={() => setIsPrivate(false)}
+              className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+            />
+            <span className="ml-2 text-sm text-gray-700">
+              <span className="font-medium">Public</span>
+              <span className="text-gray-500"> - Share with the community</span>
+            </span>
+          </label>
+        </div>
+        <p className="mt-2 text-xs text-gray-500">
+          Public patches will be visible to all users on the shared patches page.
+        </p>
       </div>
 
       {/* Modules Used */}

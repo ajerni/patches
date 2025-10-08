@@ -26,6 +26,7 @@ interface Patch {
   images: string[];
   sounds: string[];
   schema?: any;
+  private: boolean;
   patchModules?: Array<{
     module: {
       id: string;
@@ -116,7 +117,16 @@ export default function PatchDetailPage({ params }: { params: { id: string } }) 
           <div className="bg-gradient-to-r from-primary-500 to-primary-600 px-4 sm:px-8 py-4 sm:py-6">
             <div className="flex flex-col sm:flex-row justify-between items-start gap-3 mb-3">
               <div className="flex-1">
-                <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">{patch.title}</h1>
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-white">{patch.title}</h1>
+                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                    patch.private 
+                      ? 'bg-white/20 text-white' 
+                      : 'bg-green-500 text-white'
+                  }`}>
+                    {patch.private ? 'Private' : 'Public'}
+                  </span>
+                </div>
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-primary-50">
                   <div className="flex items-center space-x-1">
                     <Calendar className="h-3 sm:h-4 w-3 sm:w-4" />

@@ -33,6 +33,7 @@ model Patch {
   images        String[]      @default([])
   sounds        String[]      @default([])
   schema        Json?
+  private       Boolean       @default(true)
   userId        String
   user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   patchModules  PatchModule[]
@@ -40,6 +41,7 @@ model Patch {
   updatedAt     DateTime      @updatedAt
   
   @@index([userId])
+  @@index([private])
   @@map("patches_patches")
 }
 
