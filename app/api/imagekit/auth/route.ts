@@ -3,11 +3,11 @@ import { imagekit } from "@/lib/imagekit";
 
 export async function GET() {
   try {
-    // Set expiration to 5 minutes from now (in seconds)
+    // Set expiration to 30 seconds from now (in seconds)
     // ImageKit requires expire to be less than 1 hour in the future
-    // Using 5 minutes to be very conservative with time synchronization
+    // Using 30 seconds to be extremely conservative and ensure immediate use
     const currentTimestamp = Math.floor(Date.now() / 1000);
-    const expire = currentTimestamp + (2 * 60); // Current time + 2 minutes (120 seconds)
+    const expire = currentTimestamp + 30; // Current time + 30 seconds
     
     // Generate a unique token for each request to avoid collisions
     // Using crypto.randomUUID() for V4 UUIDs as suggested by ImageKit

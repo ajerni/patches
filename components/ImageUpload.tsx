@@ -30,14 +30,16 @@ export function ImageUpload({ images, onImagesChange, folder = "/patches" }: Ima
     try {
       console.log("🔐 Fetching fresh ImageKit authentication...");
       
-      // Add a cache-busting parameter to ensure we always get a fresh token
+      // Add multiple cache-busting parameters to ensure we always get a fresh token
       const cacheBuster = Date.now();
-      const response = await fetch(`/api/imagekit/auth?t=${cacheBuster}`, {
+      const randomId = Math.random().toString(36).substring(7);
+      const response = await fetch(`/api/imagekit/auth?t=${cacheBuster}&r=${randomId}&_=${Date.now()}`, {
         method: 'GET',
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Pragma': 'no-cache',
-          'Expires': '0'
+          'Expires': '0',
+          'X-Requested-With': 'XMLHttpRequest'
         }
       });
       
@@ -47,14 +49,22 @@ export function ImageUpload({ images, onImagesChange, folder = "/patches" }: Ima
       const data = await response.json();
       const { signature, expire, token } = data;
       
-      // Add a small delay to ensure token is fresh
-      await new Promise(resolve => setTimeout(resolve, 100));
+      const currentTime = Math.floor(Date.now() / 1000);
+      const timeUntilExpire = expire - currentTime;
       
       console.log("✅ Fresh ImageKit authentication successful", { 
         expire: new Date(expire * 1000).toISOString(),
         tokenLength: token?.length || 0,
-        cacheBuster: cacheBuster
+        cacheBuster: cacheBuster,
+        randomId: randomId,
+        timeUntilExpire: timeUntilExpire + " seconds",
+        currentTime: new Date(currentTime * 1000).toISOString()
       });
+      
+      // Validate that the token is fresh (should have at least 25 seconds left)
+      if (timeUntilExpire < 25) {
+        console.warn("⚠️ Token expires very soon, but proceeding with upload");
+      }
       
       return { signature, expire, token };
     } catch (error) {
@@ -101,6 +111,7 @@ export function ImageUpload({ images, onImagesChange, folder = "/patches" }: Ima
   };
 
   const triggerUpload = () => {
+    console.log("🚀 Triggering upload with fresh authentication...");
     if (uploadRef.current) {
       uploadRef.current.click();
     }
