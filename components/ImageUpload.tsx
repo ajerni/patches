@@ -18,30 +18,53 @@ export function ImageUpload({ images, onImagesChange, folder = "/patches" }: Ima
   const publicKey = process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!;
   const urlEndpoint = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!;
   
+  // Debug ImageKit configuration
+  console.log("🔧 ImageKit config:", {
+    publicKey: publicKey ? `${publicKey.substring(0, 8)}...` : 'MISSING',
+    urlEndpoint: urlEndpoint || 'MISSING'
+  });
+  
   // Authenticator function that fetches auth params from our API
   const authenticator = async () => {
     try {
+      console.log("🔐 Fetching ImageKit authentication...");
       const response = await fetch("/api/imagekit/auth");
       if (!response.ok) {
         throw new Error("Failed to fetch authentication parameters");
       }
       const data = await response.json();
       const { signature, expire, token } = data;
+      
+      // Add a small delay to ensure token is fresh
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      console.log("✅ ImageKit authentication successful", { 
+        expire: new Date(expire * 1000).toISOString(),
+        tokenLength: token?.length || 0 
+      });
+      
       return { signature, expire, token };
     } catch (error) {
-      console.error("Authentication error:", error);
+      console.error("❌ Authentication error:", error);
       throw new Error("Unable to authenticate upload");
     }
   };
 
   const onError = (err: any) => {
-    console.error("Upload error:", err);
+    console.error("❌ Upload error:", err);
+    console.error("❌ Error details:", {
+      message: err?.message,
+      help: err?.help,
+      statusCode: err?.$ResponseMetadata?.statusCode,
+      fullError: err
+    });
     setUploading(false);
-    alert("Failed to upload image. Please try again.");
+    alert(`Failed to upload image: ${err?.message || 'Unknown error'}. Please try again.`);
   };
 
   const onSuccess = (res: any) => {
-    console.log("Upload success:", res);
+    console.log("✅ Upload success:", res);
+    console.log("✅ New image URL:", res.url);
     setUploading(false);
     setUploadProgress(0);
     
