@@ -37,18 +37,21 @@ interface VirtualPatchGridProps {
   likedPatches: Set<string>;
   likingPatches: Set<string>;
   onLike: (patchId: string, isLiked: boolean) => void;
+  likesLoaded: boolean;
 }
 
 const PatchCard = ({ 
   patch, 
   likedPatches, 
   likingPatches, 
-  onLike 
+  onLike,
+  likesLoaded
 }: { 
   patch: SharedPatch;
   likedPatches: Set<string>;
   likingPatches: Set<string>;
   onLike: (patchId: string, isLiked: boolean) => void;
+  likesLoaded: boolean;
 }) => (
   <div className="h-full p-2">
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition group h-full flex flex-col">
@@ -130,16 +133,18 @@ const PatchCard = ({
               e.stopPropagation();
               onLike(patch.id, likedPatches.has(patch.id));
             }}
-            disabled={likingPatches.has(patch.id)}
+            disabled={likingPatches.has(patch.id) || !likesLoaded}
             className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-colors ${
-              likedPatches.has(patch.id)
+              !likesLoaded
+                ? 'bg-gray-50 text-gray-400'
+                : likedPatches.has(patch.id)
                 ? 'bg-red-50 text-red-600 hover:bg-red-100'
                 : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-            } ${likingPatches.has(patch.id) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+            } ${(likingPatches.has(patch.id) || !likesLoaded) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
           >
             <Heart 
               className={`h-3 w-3 ${
-                likedPatches.has(patch.id) ? 'fill-current' : ''
+                likesLoaded && likedPatches.has(patch.id) ? 'fill-current' : ''
               }`} 
             />
             <span>{patch.likeCount}</span>
@@ -159,7 +164,8 @@ export function VirtualPatchGrid({
   height,
   likedPatches,
   likingPatches,
-  onLike
+  onLike,
+  likesLoaded
 }: VirtualPatchGridProps) {
   // Calculate responsive columns
   const getColumnsPerRow = (containerWidth: number) => {
@@ -193,6 +199,7 @@ export function VirtualPatchGrid({
             likedPatches={likedPatches}
             likingPatches={likingPatches}
             onLike={onLike}
+            likesLoaded={likesLoaded}
           />
         ))}
       </div>

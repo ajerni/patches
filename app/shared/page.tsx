@@ -58,6 +58,7 @@ export default function SharedPatchesPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [likedPatches, setLikedPatches] = useState<Set<string>>(new Set());
   const [likingPatches, setLikingPatches] = useState<Set<string>>(new Set());
+  const [likesLoaded, setLikesLoaded] = useState(false);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -102,11 +103,13 @@ export default function SharedPatchesPage() {
       
       const data = await response.json();
       
-      if (reset) {
-        setPatches(data.patches);
-      } else {
-        setPatches(prev => [...prev, ...data.patches]);
-      }
+             if (reset) {
+               setPatches(data.patches);
+               setLikesLoaded(false); // Reset likes loaded state for new patches
+             } else {
+               setPatches(prev => [...prev, ...data.patches]);
+               setLikesLoaded(false); // Reset likes loaded state for new patches
+             }
       
       setPagination(data.pagination);
       setError("");
@@ -145,6 +148,49 @@ export default function SharedPatchesPage() {
       fetchPatches(1, true);
     }
   }, [status, fetchPatches]);
+
+  // Load user's existing likes
+  const loadUserLikes = useCallback(async () => {
+    if (status !== "authenticated" || likesLoaded) return;
+    
+    try {
+      // Get all patch IDs from current patches
+      const patchIds = patches.map(patch => patch.id);
+      if (patchIds.length === 0) return;
+
+      // Check like status for all patches
+      const likePromises = patchIds.map(async (patchId) => {
+        try {
+          const response = await fetch(`/api/patches/${patchId}/like`);
+          if (response.ok) {
+            const data = await response.json();
+            return { patchId, liked: data.liked };
+          }
+        } catch (error) {
+          console.error(`Error checking like status for patch ${patchId}:`, error);
+        }
+        return { patchId, liked: false };
+      });
+
+      const likeResults = await Promise.all(likePromises);
+      const likedPatchIds = likeResults
+        .filter(result => result.liked)
+        .map(result => result.patchId);
+
+      setLikedPatches(new Set(likedPatchIds));
+      setLikesLoaded(true);
+    } catch (error) {
+      console.error('Error loading user likes:', error);
+      setLikesLoaded(true); // Set to true to prevent infinite retries
+    }
+  }, [status, patches, likesLoaded]);
+
+  // Load user likes when patches are loaded
+  useEffect(() => {
+    if (status === "authenticated" && patches.length > 0) {
+      loadUserLikes();
+    }
+  }, [status, patches, loadUserLikes]);
 
   // Handle search with debounce
   useEffect(() => {
@@ -347,6 +393,7 @@ export default function SharedPatchesPage() {
                 likedPatches={likedPatches}
                 likingPatches={likingPatches}
                 onLike={handleLike}
+                likesLoaded={likesLoaded}
               />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
@@ -428,16 +475,18 @@ export default function SharedPatchesPage() {
                             e.stopPropagation();
                             handleLike(patch.id, likedPatches.has(patch.id));
                           }}
-                          disabled={likingPatches.has(patch.id)}
+                          disabled={likingPatches.has(patch.id) || !likesLoaded}
                           className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-colors ${
-                            likedPatches.has(patch.id)
+                            !likesLoaded
+                              ? 'bg-gray-50 text-gray-400'
+                              : likedPatches.has(patch.id)
                               ? 'bg-red-50 text-red-600 hover:bg-red-100'
                               : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-                          } ${likingPatches.has(patch.id) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                          } ${(likingPatches.has(patch.id) || !likesLoaded) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                         >
                           <Heart 
                             className={`h-3 w-3 ${
-                              likedPatches.has(patch.id) ? 'fill-current' : ''
+                              likesLoaded && likedPatches.has(patch.id) ? 'fill-current' : ''
                             }`} 
                           />
                           <span>{patch.likeCount}</span>
