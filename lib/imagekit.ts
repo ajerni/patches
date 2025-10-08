@@ -37,6 +37,56 @@ export function extractFileIdFromUrl(url: string): string | null {
 }
 
 /**
+ * Retry function with exponential backoff for network operations
+ */
+async function retryWithBackoff<T>(
+  operation: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 1000
+): Promise<T> {
+  let lastError: any;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error: any) {
+      lastError = error;
+      
+      // Don't retry on certain errors
+      if (error?.message?.includes('No file found') || 
+          error?.message?.includes('not found') ||
+          error?.response?.status === 404) {
+        throw error; // Re-throw immediately for "not found" errors
+      }
+      
+      // Check if this is a network connectivity error that should be retried
+      const isNetworkError = error?.code === 'ECONNRESET' || 
+                            error?.code === 'ENOTFOUND' ||
+                            error?.code === 'ETIMEDOUT' ||
+                            error?.message?.includes('socket hang up') ||
+                            error?.message?.includes('Client network socket disconnected') ||
+                            error?.message?.includes('TLS connection was established');
+      
+      if (!isNetworkError && attempt === 1) {
+        // If it's not a network error, don't retry
+        throw error;
+      }
+      
+      if (attempt === maxRetries) {
+        console.error(`❌ Operation failed after ${maxRetries} attempts:`, error);
+        throw error;
+      }
+      
+      const delay = baseDelay * Math.pow(2, attempt - 1); // Exponential backoff
+      console.log(`⚠️ Attempt ${attempt} failed, retrying in ${delay}ms...`, error?.message);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw lastError;
+}
+
+/**
  * Deletes an image from ImageKit by its URL
  * This function searches for the file on ImageKit and deletes it by fileId
  */
@@ -56,11 +106,12 @@ export async function deleteImageKitFile(url: string): Promise<boolean> {
 
     console.log(`🔍 Extracted filename: ${fileName}`);
 
-    // Search for the file by name
-    // Note: This may return multiple results if there are files with the same name in different folders
-    const searchResults = await imagekit.listFiles({
-      searchQuery: `name="${fileName}"`,
-      limit: 10,
+    // Search for the file by name with retry logic
+    const searchResults = await retryWithBackoff(async () => {
+      return await imagekit.listFiles({
+        searchQuery: `name="${fileName}"`,
+        limit: 10,
+      });
     });
 
     console.log(`🔍 Search results for "${fileName}": ${searchResults.length} files found`);
@@ -73,7 +124,12 @@ export async function deleteImageKitFile(url: string): Promise<boolean> {
 
     if (matchingFile && matchingFile.fileId) {
       console.log(`🎯 Found exact match, deleting fileId: ${matchingFile.fileId}`);
-      await imagekit.deleteFile(matchingFile.fileId);
+      
+      // Delete with retry logic
+      await retryWithBackoff(async () => {
+        return await imagekit.deleteFile(matchingFile.fileId);
+      });
+      
       console.log('✅ Successfully deleted ImageKit file:', fileName, 'fileId:', matchingFile.fileId);
       return true;
     }
@@ -82,9 +138,11 @@ export async function deleteImageKitFile(url: string): Promise<boolean> {
     const filePath = urlObj.pathname;
     console.log(`🔍 Trying path search for: ${filePath}`);
     
-    const pathSearch = await imagekit.listFiles({
-      path: filePath.substring(0, filePath.lastIndexOf('/')),
-      limit: 100,
+    const pathSearch = await retryWithBackoff(async () => {
+      return await imagekit.listFiles({
+        path: filePath.substring(0, filePath.lastIndexOf('/')),
+        limit: 100,
+      });
     });
 
     console.log(`🔍 Path search results: ${pathSearch.length} files found`);
@@ -92,7 +150,12 @@ export async function deleteImageKitFile(url: string): Promise<boolean> {
     const fileByPath = pathSearch.find(f => f.name === fileName);
     if (fileByPath && fileByPath.fileId) {
       console.log(`🎯 Found file by path, deleting fileId: ${fileByPath.fileId}`);
-      await imagekit.deleteFile(fileByPath.fileId);
+      
+      // Delete with retry logic
+      await retryWithBackoff(async () => {
+        return await imagekit.deleteFile(fileByPath.fileId);
+      });
+      
       console.log('✅ Successfully deleted ImageKit file by path:', fileName, 'fileId:', fileByPath.fileId);
       return true;
     }
