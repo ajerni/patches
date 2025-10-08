@@ -1,8 +1,19 @@
 import { NextResponse } from "next/server";
 import { imagekit } from "@/lib/imagekit";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    // Get query parameters to see what's being requested
+    const url = new URL(request.url);
+    const queryParams = Object.fromEntries(url.searchParams.entries());
+    
+    console.log(`🔐 ImageKit auth request received:`, {
+      timestamp: new Date().toISOString(),
+      queryParams: queryParams,
+      userAgent: request.headers.get('user-agent'),
+      referer: request.headers.get('referer')
+    });
+    
     // Set expiration to 5 minutes from now (in seconds)
     // ImageKit requires expire to be less than 1 hour in the future
     // Using 5 minutes to allow enough time for upload completion while staying well under 1 hour
@@ -22,6 +33,7 @@ export async function GET() {
     );
     
     console.log(`🔐 Generated new ImageKit auth token: ${uniqueToken.substring(0, 8)}...`);
+    console.log(`🔐 Full token: ${uniqueToken}`);
     console.log(`⏰ Expire timestamp: ${expire} (${new Date(expire * 1000).toISOString()})`);
     console.log(`⏰ Current timestamp: ${currentTimestamp} (${new Date(currentTimestamp * 1000).toISOString()})`);
     console.log(`⏰ Time until expire: ${expire - currentTimestamp} seconds`);

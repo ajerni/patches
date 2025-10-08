@@ -29,13 +29,18 @@ export function ImageUpload({ images, onImagesChange, folder = "/patches" }: Ima
   // Authenticator function that fetches auth params from our API
   const authenticator = useCallback(async () => {
     try {
-      console.log(`🔐 Fetching fresh ImageKit authentication (upload #${uploadKey + 1})...`);
+      const callId = Math.random().toString(36).substring(2, 15);
+      console.log(`🔐 [${callId}] Authenticator called for upload #${uploadKey + 1} at ${new Date().toISOString()}`);
       
       // Add multiple cache-busting parameters to ensure we always get a fresh token
       const cacheBuster = Date.now();
       const randomId = Math.random().toString(36).substring(7);
       const uniqueId = Math.random().toString(36).substring(2, 15);
-      const response = await fetch(`/api/imagekit/auth?t=${cacheBuster}&r=${randomId}&_=${Date.now()}&upload=${uploadKey}&id=${uniqueId}`, {
+      const authUrl = `/api/imagekit/auth?t=${cacheBuster}&r=${randomId}&_=${Date.now()}&upload=${uploadKey}&id=${uniqueId}&callId=${callId}`;
+      
+      console.log(`🔐 [${callId}] Making auth request to: ${authUrl}`);
+      
+      const response = await fetch(authUrl, {
         method: 'GET',
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -54,20 +59,22 @@ export function ImageUpload({ images, onImagesChange, folder = "/patches" }: Ima
       const currentTime = Math.floor(Date.now() / 1000);
       const timeUntilExpire = expire - currentTime;
       
-      console.log(`✅ Fresh ImageKit authentication successful (upload #${uploadKey + 1})`, { 
+      console.log(`✅ [${callId}] Fresh ImageKit authentication successful (upload #${uploadKey + 1})`, { 
         expire: new Date(expire * 1000).toISOString(),
         tokenLength: token?.length || 0,
+        tokenPreview: token?.substring(0, 20) + '...',
         cacheBuster: cacheBuster,
         randomId: randomId,
         uniqueId: uniqueId,
         timeUntilExpire: timeUntilExpire + " seconds",
         currentTime: new Date(currentTime * 1000).toISOString(),
-        upload: uploadKey + 1
+        upload: uploadKey + 1,
+        callId: callId
       });
       
       // Validate that the token is fresh (should have at least 2 minutes left for upload)
       if (timeUntilExpire < 120) {
-        console.warn("⚠️ Token expires in less than 2 minutes, but proceeding with upload");
+        console.warn(`⚠️ [${callId}] Token expires in less than 2 minutes, but proceeding with upload`);
       }
       
       return { signature, expire, token };
