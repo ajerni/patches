@@ -26,61 +26,56 @@ export function ImageUpload({ images, onImagesChange, folder = "/patches" }: Ima
     folder: folder
   });
   
-  // Create a completely fresh authenticator function for each upload
-  const createAuthenticator = () => {
-    return async () => {
-      try {
-        const currentAttempt = authCounter + 1;
-        console.log(`🔐 Fetching fresh ImageKit authentication (attempt #${currentAttempt})...`);
-        
-        // Add multiple cache-busting parameters to ensure we always get a fresh token
-        const cacheBuster = Date.now();
-        const randomId = Math.random().toString(36).substring(7);
-        const uniqueId = Math.random().toString(36).substring(2, 15);
-        const response = await fetch(`/api/imagekit/auth?t=${cacheBuster}&r=${randomId}&_=${Date.now()}&attempt=${currentAttempt}&id=${uniqueId}`, {
-          method: 'GET',
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0',
-            'X-Requested-With': 'XMLHttpRequest'
-          }
-        });
-        
-        if (!response.ok) {
-          throw new Error("Failed to fetch authentication parameters");
+  // Authenticator function that fetches auth params from our API
+  const authenticator = useCallback(async () => {
+    try {
+      console.log(`🔐 Fetching fresh ImageKit authentication (attempt #${authCounter + 1})...`);
+      
+      // Add multiple cache-busting parameters to ensure we always get a fresh token
+      const cacheBuster = Date.now();
+      const randomId = Math.random().toString(36).substring(7);
+      const uniqueId = Math.random().toString(36).substring(2, 15);
+      const response = await fetch(`/api/imagekit/auth?t=${cacheBuster}&r=${randomId}&_=${Date.now()}&attempt=${authCounter}&id=${uniqueId}`, {
+        method: 'GET',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+          'X-Requested-With': 'XMLHttpRequest'
         }
-        const data = await response.json();
-        const { signature, expire, token } = data;
-        
-        const currentTime = Math.floor(Date.now() / 1000);
-        const timeUntilExpire = expire - currentTime;
-        
-        console.log(`✅ Fresh ImageKit authentication successful (attempt #${currentAttempt})`, { 
-          expire: new Date(expire * 1000).toISOString(),
-          tokenLength: token?.length || 0,
-          cacheBuster: cacheBuster,
-          randomId: randomId,
-          uniqueId: uniqueId,
-          timeUntilExpire: timeUntilExpire + " seconds",
-          currentTime: new Date(currentTime * 1000).toISOString(),
-          attempt: currentAttempt
-        });
-        
-        // Validate that the token is fresh (should have at least 2 minutes left for upload)
-        if (timeUntilExpire < 120) {
-          console.warn("⚠️ Token expires in less than 2 minutes, but proceeding with upload");
-        }
-        
-        return { signature, expire, token };
-      } catch (error) {
-        console.error("❌ Authentication error:", error);
-        throw new Error("Unable to authenticate upload");
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch authentication parameters");
       }
-    };
-  };
-
-  const authenticator = createAuthenticator();
+      const data = await response.json();
+      const { signature, expire, token } = data;
+      
+      const currentTime = Math.floor(Date.now() / 1000);
+      const timeUntilExpire = expire - currentTime;
+      
+      console.log(`✅ Fresh ImageKit authentication successful (attempt #${authCounter + 1})`, { 
+        expire: new Date(expire * 1000).toISOString(),
+        tokenLength: token?.length || 0,
+        cacheBuster: cacheBuster,
+        randomId: randomId,
+        uniqueId: uniqueId,
+        timeUntilExpire: timeUntilExpire + " seconds",
+        currentTime: new Date(currentTime * 1000).toISOString(),
+        attempt: authCounter + 1
+      });
+      
+      // Validate that the token is fresh (should have at least 2 minutes left for upload)
+      if (timeUntilExpire < 120) {
+        console.warn("⚠️ Token expires in less than 2 minutes, but proceeding with upload");
+      }
+      
+      return { signature, expire, token };
+    } catch (error) {
+      console.error("❌ Authentication error:", error);
+      throw new Error("Unable to authenticate upload");
+    }
+  }, [authCounter]);
 
   const onError = (err: any) => {
     console.error("❌ Upload error:", err);
@@ -132,7 +127,6 @@ export function ImageUpload({ images, onImagesChange, folder = "/patches" }: Ima
   return (
     <div className="space-y-4">
       <IKContext
-        key={`ik-context-${authCounter}`}
         publicKey={publicKey}
         urlEndpoint={urlEndpoint}
         authenticator={authenticator}
