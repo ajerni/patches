@@ -27,8 +27,19 @@ export function ImageUpload({ images, onImagesChange, folder = "/patches" }: Ima
   // Authenticator function that fetches auth params from our API
   const authenticator = async () => {
     try {
-      console.log("🔐 Fetching ImageKit authentication...");
-      const response = await fetch("/api/imagekit/auth");
+      console.log("🔐 Fetching fresh ImageKit authentication...");
+      
+      // Add a cache-busting parameter to ensure we always get a fresh token
+      const cacheBuster = Date.now();
+      const response = await fetch(`/api/imagekit/auth?t=${cacheBuster}`, {
+        method: 'GET',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      
       if (!response.ok) {
         throw new Error("Failed to fetch authentication parameters");
       }
@@ -38,9 +49,10 @@ export function ImageUpload({ images, onImagesChange, folder = "/patches" }: Ima
       // Add a small delay to ensure token is fresh
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      console.log("✅ ImageKit authentication successful", { 
+      console.log("✅ Fresh ImageKit authentication successful", { 
         expire: new Date(expire * 1000).toISOString(),
-        tokenLength: token?.length || 0 
+        tokenLength: token?.length || 0,
+        cacheBuster: cacheBuster
       });
       
       return { signature, expire, token };

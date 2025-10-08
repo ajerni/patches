@@ -11,7 +11,9 @@ export async function GET() {
     
     // Generate a unique token for each request to avoid collisions
     // Using crypto.randomUUID() for V4 UUIDs as suggested by ImageKit
-    const uniqueToken = crypto.randomUUID();
+    // Adding timestamp to make it even more unique
+    const timestamp = Date.now();
+    const uniqueToken = `${crypto.randomUUID()}-${timestamp}`;
     
     const authenticationParameters = imagekit.getAuthenticationParameters(
       uniqueToken, // unique token for each request
@@ -23,7 +25,13 @@ export async function GET() {
     console.log(`⏰ Current timestamp: ${currentTimestamp} (${new Date(currentTimestamp * 1000).toISOString()})`);
     console.log(`⏰ Time until expire: ${expire - currentTimestamp} seconds`);
     
-    return NextResponse.json(authenticationParameters);
+    // Add cache-busting headers to prevent any caching
+    const response = NextResponse.json(authenticationParameters);
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    
+    return response;
   } catch (error) {
     console.error("ImageKit auth error:", error);
     return NextResponse.json(
