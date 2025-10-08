@@ -13,7 +13,7 @@ interface ImageUploadProps {
 export function ImageUpload({ images, onImagesChange, folder = "/patches" }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [authCounter, setAuthCounter] = useState(0);
+  const [uploadKey, setUploadKey] = useState(0);
   const uploadRef = useRef<any>(null);
 
   const publicKey = process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!;
@@ -29,13 +29,13 @@ export function ImageUpload({ images, onImagesChange, folder = "/patches" }: Ima
   // Authenticator function that fetches auth params from our API
   const authenticator = useCallback(async () => {
     try {
-      console.log(`🔐 Fetching fresh ImageKit authentication (attempt #${authCounter + 1})...`);
+      console.log(`🔐 Fetching fresh ImageKit authentication (upload #${uploadKey + 1})...`);
       
       // Add multiple cache-busting parameters to ensure we always get a fresh token
       const cacheBuster = Date.now();
       const randomId = Math.random().toString(36).substring(7);
       const uniqueId = Math.random().toString(36).substring(2, 15);
-      const response = await fetch(`/api/imagekit/auth?t=${cacheBuster}&r=${randomId}&_=${Date.now()}&attempt=${authCounter}&id=${uniqueId}`, {
+      const response = await fetch(`/api/imagekit/auth?t=${cacheBuster}&r=${randomId}&_=${Date.now()}&upload=${uploadKey}&id=${uniqueId}`, {
         method: 'GET',
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -54,7 +54,7 @@ export function ImageUpload({ images, onImagesChange, folder = "/patches" }: Ima
       const currentTime = Math.floor(Date.now() / 1000);
       const timeUntilExpire = expire - currentTime;
       
-      console.log(`✅ Fresh ImageKit authentication successful (attempt #${authCounter + 1})`, { 
+      console.log(`✅ Fresh ImageKit authentication successful (upload #${uploadKey + 1})`, { 
         expire: new Date(expire * 1000).toISOString(),
         tokenLength: token?.length || 0,
         cacheBuster: cacheBuster,
@@ -62,7 +62,7 @@ export function ImageUpload({ images, onImagesChange, folder = "/patches" }: Ima
         uniqueId: uniqueId,
         timeUntilExpire: timeUntilExpire + " seconds",
         currentTime: new Date(currentTime * 1000).toISOString(),
-        attempt: authCounter + 1
+        upload: uploadKey + 1
       });
       
       // Validate that the token is fresh (should have at least 2 minutes left for upload)
@@ -75,7 +75,7 @@ export function ImageUpload({ images, onImagesChange, folder = "/patches" }: Ima
       console.error("❌ Authentication error:", error);
       throw new Error("Unable to authenticate upload");
     }
-  }, [authCounter]);
+  }, [uploadKey]);
 
   const onError = (err: any) => {
     console.error("❌ Upload error:", err);
@@ -117,11 +117,15 @@ export function ImageUpload({ images, onImagesChange, folder = "/patches" }: Ima
 
   const triggerUpload = () => {
     console.log("🚀 Triggering upload with fresh authentication...");
-    // Force a new authenticator function by updating the counter
-    setAuthCounter(prev => prev + 1);
-    if (uploadRef.current) {
-      uploadRef.current.click();
-    }
+    // Force a new authenticator function by updating the upload key
+    setUploadKey(prev => prev + 1);
+    
+    // Small delay to ensure state updates are processed
+    setTimeout(() => {
+      if (uploadRef.current) {
+        uploadRef.current.click();
+      }
+    }, 50);
   };
 
   return (

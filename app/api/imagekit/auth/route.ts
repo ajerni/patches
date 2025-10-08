@@ -9,11 +9,12 @@ export async function GET() {
     const currentTimestamp = Math.floor(Date.now() / 1000);
     const expire = currentTimestamp + (5 * 60); // Current time + 5 minutes (300 seconds)
     
-    // Generate a unique token for each request to avoid collisions
-    // Using crypto.randomUUID() for V4 UUIDs as suggested by ImageKit
-    // Adding timestamp to make it even more unique
+    // Generate a truly unique token for each request to avoid collisions
+    // Using multiple sources of randomness to ensure uniqueness
     const timestamp = Date.now();
-    const uniqueToken = `${crypto.randomUUID()}-${timestamp}`;
+    const randomBytes = crypto.getRandomValues(new Uint8Array(16));
+    const randomHex = Array.from(randomBytes, byte => byte.toString(16).padStart(2, '0')).join('');
+    const uniqueToken = `${crypto.randomUUID()}-${timestamp}-${randomHex}`;
     
     const authenticationParameters = imagekit.getAuthenticationParameters(
       uniqueToken, // unique token for each request
