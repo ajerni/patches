@@ -61,9 +61,9 @@ export function ImageUpload({ images, onImagesChange, folder = "/patches" }: Ima
         currentTime: new Date(currentTime * 1000).toISOString()
       });
       
-      // Validate that the token is fresh (should have at least 25 seconds left)
-      if (timeUntilExpire < 25) {
-        console.warn("⚠️ Token expires very soon, but proceeding with upload");
+      // Validate that the token is fresh (should have at least 2 minutes left for upload)
+      if (timeUntilExpire < 120) {
+        console.warn("⚠️ Token expires in less than 2 minutes, but proceeding with upload");
       }
       
       return { signature, expire, token };
@@ -101,6 +101,7 @@ export function ImageUpload({ images, onImagesChange, folder = "/patches" }: Ima
   };
 
   const onUploadStart = () => {
+    console.log("🚀 Upload starting - requesting fresh authentication...");
     setUploading(true);
     setUploadProgress(0);
   };
