@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { deleteImageKitFiles } from "@/lib/imagekit";
+import { isAdmin } from "@/lib/admin";
 
 const patchSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -67,14 +68,19 @@ export async function GET(
     // 1. It's the specific public example patch (no auth required)
     // 2. It's the user's own patch
     // 3. It's someone else's shared (non-private) patch and user is authenticated
+    // 4. User is an admin (can view any patch)
     if (params.id === "cmgj5m2vo0007109dy80vryyu") {
       // Always allow the public example patch
     } else if (patch.userId !== session?.user?.id && patch.private) {
-      // Block access to other users' private patches
-      return NextResponse.json(
-        { error: "Forbidden" },
-        { status: 403 }
-      );
+      // Check if user is admin
+      const adminCheck = await isAdmin();
+      if (!adminCheck) {
+        // Block access to other users' private patches for non-admins
+        return NextResponse.json(
+          { error: "Forbidden" },
+          { status: 403 }
+        );
+      }
     }
 
     return NextResponse.json(patch);

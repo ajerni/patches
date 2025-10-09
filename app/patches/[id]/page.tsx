@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { HearthisEmbed } from "@/components/HearthisEmbed";
-import { Edit, ArrowLeft, Music, Calendar, Tag, Image as ImageIcon, Volume2, Boxes, Network } from "lucide-react";
+import { Edit, ArrowLeft, Music, Calendar, Tag, Image as ImageIcon, Volume2, Boxes, Network, Shield } from "lucide-react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import ReactMarkdown from "react-markdown";
@@ -51,6 +51,7 @@ export default function PatchDetailPage({ params }: { params: { id: string } }) 
   const router = useRouter();
   const [patch, setPatch] = useState<Patch | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     // Allow access to the specific public patch without authentication
@@ -58,6 +59,24 @@ export default function PatchDetailPage({ params }: { params: { id: string } }) 
       router.push("/login");
     }
   }, [status, router, params.id]);
+
+  useEffect(() => {
+    // Check if user is admin
+    if (status === "authenticated" && session?.user?.email) {
+      checkAdminStatus();
+    }
+  }, [status, session]);
+
+  const checkAdminStatus = async () => {
+    try {
+      const response = await fetch('/api/admin/check');
+      if (response.ok) {
+        setIsAdmin(true);
+      }
+    } catch (error) {
+      // User is not admin, that's fine
+    }
+  };
 
   useEffect(() => {
     // Fetch patch if authenticated OR if it's the public patch
@@ -161,6 +180,15 @@ export default function PatchDetailPage({ params }: { params: { id: string } }) 
                     <>
                       <span className="hidden sm:inline">•</span>
                       <span className="text-green-200">Shared Patch</span>
+                    </>
+                  )}
+                  {isAdmin && session?.user?.id !== patch.userId && (
+                    <>
+                      <span className="hidden sm:inline">•</span>
+                      <span className="flex items-center gap-1 text-yellow-200">
+                        <Shield className="h-3 w-3" />
+                        Admin View
+                      </span>
                     </>
                   )}
                 </div>

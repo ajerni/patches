@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
-import { Edit, ArrowLeft, Boxes, Calendar, Image as ImageIcon, Music } from "lucide-react";
+import { Edit, ArrowLeft, Boxes, Calendar, Image as ImageIcon, Music, Shield } from "lucide-react";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 
@@ -35,10 +35,11 @@ interface Module {
 }
 
 export default function ModuleDetailPage({ params }: { params: { id: string } }) {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [module, setModule] = useState<Module | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -49,8 +50,20 @@ export default function ModuleDetailPage({ params }: { params: { id: string } })
   useEffect(() => {
     if (status === "authenticated") {
       fetchModule();
+      checkAdminStatus();
     }
   }, [status, params.id]);
+
+  const checkAdminStatus = async () => {
+    try {
+      const response = await fetch('/api/admin/check');
+      if (response.ok) {
+        setIsAdmin(true);
+      }
+    } catch (error) {
+      // User is not admin, that's fine
+    }
+  };
 
   const fetchModule = async () => {
     try {
@@ -123,6 +136,15 @@ export default function ModuleDetailPage({ params }: { params: { id: string } })
                   </div>
                   <span className="hidden sm:inline">•</span>
                   <span>by {module.user.name}</span>
+                  {isAdmin && session?.user?.id !== module.userId && (
+                    <>
+                      <span className="hidden sm:inline">•</span>
+                      <span className="flex items-center gap-1 text-yellow-200">
+                        <Shield className="h-3 w-3" />
+                        Admin View
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
               <Link

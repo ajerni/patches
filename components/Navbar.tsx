@@ -1,13 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { Music, LogOut, User, Menu, X, Info } from "lucide-react";
+import { Music, LogOut, User, Menu, X, Info, Settings } from "lucide-react";
 
 export function Navbar() {
   const { data: session } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (session?.user?.email) {
+      // Check if user is admin by calling the API
+      fetch('/api/admin/stats')
+        .then(response => {
+          setIsAdmin(response.ok);
+        })
+        .catch(() => {
+          setIsAdmin(false);
+        });
+    } else {
+      setIsAdmin(false);
+    }
+  }, [session]);
 
   return (
     <nav className="bg-white shadow-sm border-b">
@@ -51,6 +67,15 @@ export function Navbar() {
                 >
                   About
                 </Link>
+                {isAdmin && (
+                  <Link
+                    href="/admin"
+                    className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium flex items-center"
+                  >
+                    <Settings className="h-4 w-4 mr-1" />
+                    Admin
+                  </Link>
+                )}
                 <div className="flex items-center space-x-2 text-sm text-gray-700">
                   <User className="h-4 w-4" />
                   <span>{session.user.name}</span>
@@ -144,6 +169,16 @@ export function Navbar() {
                 >
                   About
                 </Link>
+                {isAdmin && (
+                  <Link
+                    href="/admin"
+                    className="block text-gray-700 hover:text-primary-600 hover:bg-gray-50 px-3 py-2 rounded-md text-base font-medium flex items-center"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    Admin
+                  </Link>
+                )}
                 <button
                   onClick={() => {
                     setMobileMenuOpen(false);

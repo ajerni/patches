@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { deleteImageKitFiles } from "@/lib/imagekit";
+import { isAdmin } from "@/lib/admin";
 
 const moduleSchema = z.object({
   manufacturer: z.string().min(1, "Manufacturer is required"),
@@ -62,11 +63,17 @@ export async function GET(
       );
     }
 
+    // Allow access if:
+    // 1. It's the user's own module
+    // 2. User is an admin (can view any module)
     if (module.userId !== session.user.id) {
-      return NextResponse.json(
-        { error: "Forbidden" },
-        { status: 403 }
-      );
+      const adminCheck = await isAdmin();
+      if (!adminCheck) {
+        return NextResponse.json(
+          { error: "Forbidden" },
+          { status: 403 }
+        );
+      }
     }
 
     return NextResponse.json(module);
