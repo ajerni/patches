@@ -11,6 +11,7 @@ import ReactMarkdown from "react-markdown";
 
 interface Module {
   id: string;
+  userId: string;
   manufacturer: string;
   name: string;
   types?: string[];
