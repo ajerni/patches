@@ -300,9 +300,13 @@ export function PatchManagement() {
                             {patch.title}
                           </p>
                           {patch.private ? (
-                            <EyeOff className="h-4 w-4 text-gray-400" title="Private" />
+                            <span title="Private">
+                              <EyeOff className="h-4 w-4 text-gray-400" />
+                            </span>
                           ) : (
-                            <Eye className="h-4 w-4 text-green-500" title="Public" />
+                            <span title="Public">
+                              <Eye className="h-4 w-4 text-green-500" />
+                            </span>
                           )}
                         </div>
                         <p className="text-sm text-gray-500 truncate">
