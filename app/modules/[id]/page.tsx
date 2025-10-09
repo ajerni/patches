@@ -8,6 +8,9 @@ import { Navbar } from "@/components/Navbar";
 import { Edit, ArrowLeft, Boxes, Calendar, Image as ImageIcon, Music, Shield } from "lucide-react";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
+import Head from "next/head";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { generateModuleStructuredData, generateBreadcrumbStructuredData } from "@/lib/seo";
 
 interface Module {
   id: string;
@@ -103,17 +106,54 @@ export default function ModuleDetailPage({ params }: { params: { id: string } })
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {module && (
+        <Head>
+          <title>{module.manufacturer} {module.name} | Synth Patch Library</title>
+          <meta name="description" content={module.notes || `Modular synthesizer module: ${module.manufacturer} ${module.name}`} />
+          <meta name="keywords" content={`${module.manufacturer}, ${module.name}, ${module.types?.join(', ')}, modular synthesizer, eurorack`} />
+          <meta property="og:title" content={`${module.manufacturer} ${module.name} | Synth Patch Library`} />
+          <meta property="og:description" content={module.notes || `Modular synthesizer module: ${module.manufacturer} ${module.name}`} />
+          <meta property="og:type" content="product" />
+          <meta property="og:url" content={`${process.env.NEXT_PUBLIC_BASE_URL}/modules/${module.id}`} />
+          {module.images && module.images.length > 0 && (
+            <meta property="og:image" content={module.images[0]} />
+          )}
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content={`${module.manufacturer} ${module.name} | Synth Patch Library`} />
+          <meta name="twitter:description" content={module.notes || `Modular synthesizer module: ${module.manufacturer} ${module.name}`} />
+          {module.images && module.images.length > 0 && (
+            <meta name="twitter:image" content={module.images[0]} />
+          )}
+          <link rel="canonical" href={`${process.env.NEXT_PUBLIC_BASE_URL}/modules/${module.id}`} />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify(generateModuleStructuredData(module))
+            }}
+          />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify(generateBreadcrumbStructuredData([
+                { name: 'Modules', url: '/modules' },
+                { name: `${module.manufacturer} ${module.name}`, url: `/modules/${module.id}` }
+              ]))
+            }}
+          />
+        </Head>
+      )}
       <Navbar />
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Back Button */}
-        <Link
-          href="/modules"
-          className="inline-flex items-center space-x-2 text-gray-600 hover:text-primary-600 mb-6"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span>Back to Modules</span>
-        </Link>
+        {/* Breadcrumbs */}
+        {module && (
+          <Breadcrumbs 
+            items={[
+              { name: 'Modules', url: '/modules' },
+              { name: `${module.manufacturer} ${module.name}`, url: `/modules/${module.id}`, current: true }
+            ]} 
+          />
+        )}
 
         {/* Main Content Card */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">

@@ -4,7 +4,17 @@ Allow: /
 
 # Disallow admin and API routes
 Disallow: /api/
+Disallow: /admin/
 Disallow: /dashboard/
+Disallow: /patches/*/edit
+Disallow: /modules/*/edit
+
+# Allow public patches and modules
+Allow: /patches/
+Allow: /modules/
+
+# Crawl delay (optional - be nice to servers)
+Crawl-delay: 1
 
 # Sitemap location
 Sitemap: https://synth-patch-library.com/sitemap.xml

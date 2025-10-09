@@ -10,6 +10,7 @@ import { Edit, ArrowLeft, Music, Calendar, Tag, Image as ImageIcon, Volume2, Box
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import ReactMarkdown from "react-markdown";
+import Head from "next/head";
 
 // Dynamically import PatchSchemaViewer to avoid SSR issues
 const PatchSchemaViewer = dynamic(() => import("@/components/PatchSchemaViewer"), {
@@ -139,6 +140,50 @@ export default function PatchDetailPage({ params }: { params: { id: string } }) 
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {patch && (
+        <Head>
+          <title>{patch.title} | Synth Patch Library</title>
+          <meta name="description" content={patch.description} />
+          <meta name="keywords" content={patch.tags.join(', ')} />
+          <meta property="og:title" content={`${patch.title} | Synth Patch Library`} />
+          <meta property="og:description" content={patch.description} />
+          <meta property="og:type" content="article" />
+          <meta property="og:url" content={`${process.env.NEXT_PUBLIC_BASE_URL}/patches/${patch.id}`} />
+          {patch.images.length > 0 && (
+            <meta property="og:image" content={patch.images[0]} />
+          )}
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content={`${patch.title} | Synth Patch Library`} />
+          <meta name="twitter:description" content={patch.description} />
+          {patch.images.length > 0 && (
+            <meta name="twitter:image" content={patch.images[0]} />
+          )}
+          <link rel="canonical" href={`${process.env.NEXT_PUBLIC_BASE_URL}/patches/${patch.id}`} />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "CreativeWork",
+                "name": patch.title,
+                "description": patch.description,
+                "author": {
+                  "@type": "Person",
+                  "name": patch.user.name
+                },
+                "dateCreated": patch.createdAt,
+                "dateModified": patch.updatedAt,
+                "keywords": patch.tags.join(', '),
+                "url": `${process.env.NEXT_PUBLIC_BASE_URL}/patches/${patch.id}`,
+                "image": patch.images.length > 0 ? patch.images[0] : undefined,
+                "genre": "Modular Synthesis",
+                "about": "Synthesizer Patch",
+                "inLanguage": "en"
+              })
+            }}
+          />
+        </Head>
+      )}
       <Navbar />
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
