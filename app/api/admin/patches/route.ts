@@ -57,6 +57,7 @@ export async function GET(request: NextRequest) {
           tags: true,
           images: true,
           sounds: true,
+          schema: true,
           private: true,
           likeCount: true,
           createdAt: true,
