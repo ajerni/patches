@@ -26,7 +26,11 @@ export async function GET(
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user?.id) {
+    // Allow access to the specific public patch without authentication
+    if (params.id === "cmgj5m2vo0007109dy80vryyu") {
+      // Skip session check for public patch
+    } else if (!session?.user?.id) {
+      // Require authentication for all other patches
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
@@ -59,8 +63,14 @@ export async function GET(
       );
     }
 
-    // Allow viewing if it's the user's own patch OR if it's a public patch
-    if (patch.userId !== session.user.id && (patch as any).private) {
+    // Allow viewing if:
+    // 1. It's the specific public example patch (no auth required)
+    // 2. It's the user's own patch
+    // 3. It's someone else's shared (non-private) patch and user is authenticated
+    if (params.id === "cmgj5m2vo0007109dy80vryyu") {
+      // Always allow the public example patch
+    } else if (patch.userId !== session?.user?.id && patch.private) {
+      // Block access to other users' private patches
       return NextResponse.json(
         { error: "Forbidden" },
         { status: 403 }

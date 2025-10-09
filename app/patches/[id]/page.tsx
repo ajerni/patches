@@ -53,13 +53,15 @@ export default function PatchDetailPage({ params }: { params: { id: string } }) 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
+    // Allow access to the specific public patch without authentication
+    if (status === "unauthenticated" && params.id !== "cmgj5m2vo0007109dy80vryyu") {
       router.push("/login");
     }
-  }, [status, router]);
+  }, [status, router, params.id]);
 
   useEffect(() => {
-    if (status === "authenticated") {
+    // Fetch patch if authenticated OR if it's the public patch
+    if (status === "authenticated" || (status === "unauthenticated" && params.id === "cmgj5m2vo0007109dy80vryyu")) {
       fetchPatch();
     }
   }, [status, params.id]);
@@ -70,12 +72,29 @@ export default function PatchDetailPage({ params }: { params: { id: string } }) 
       if (res.ok) {
         const data = await res.json();
         setPatch(data);
-      } else {
+      } else if (res.status === 401) {
+        // Unauthorized - redirect to login
+        router.push("/login");
+      } else if (res.status === 403) {
+        // Forbidden - redirect to dashboard (user can't access this patch)
         router.push("/dashboard");
+      } else {
+        // Other errors - only redirect to dashboard if it's not the public patch
+        if (params.id !== "cmgj5m2vo0007109dy80vryyu") {
+          router.push("/dashboard");
+        } else {
+          console.error("Failed to fetch public patch:", res.status);
+          setLoading(false);
+        }
       }
     } catch (error) {
       console.error("Failed to fetch patch:", error);
-      router.push("/dashboard");
+      // Only redirect to dashboard if it's not the public patch
+      if (params.id !== "cmgj5m2vo0007109dy80vryyu") {
+        router.push("/dashboard");
+      } else {
+        setLoading(false);
+      }
     } finally {
       setLoading(false);
     }
@@ -273,7 +292,7 @@ export default function PatchDetailPage({ params }: { params: { id: string } }) 
             <div className="px-4 sm:px-8 py-4 sm:py-6 border-b border-gray-200">
             <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
               <Network className="h-4 sm:h-5 w-4 sm:w-5" />
-              Patch Schema
+              Patch Diagram
             </h2>
             <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
               Visual diagram showing the signal flow and connections in this patch.
