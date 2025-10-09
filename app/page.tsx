@@ -126,9 +126,9 @@ export default function Home() {
                 </div>
                 <Link
                   href="/patches/cmgj5m2vo0007109dy80vryyu"
-                  className="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700 transition"
+                  className="bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition"
                 >
-                  View Example Patch
+                  View Example
                 </Link>
               </div>
             </div>
