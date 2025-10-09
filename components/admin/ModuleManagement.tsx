@@ -315,7 +315,9 @@ export function ModuleManagement() {
                             {module.name}
                           </p>
                           {module.images.length > 0 && (
-                            <Image className="h-4 w-4 text-blue-500" title={`${module.images.length} images`} />
+                            <span title={`${module.images.length} images`}>
+                              <Image className="h-4 w-4 text-blue-500" />
+                            </span>
                           )}
                         </div>
                         <div className="flex items-center text-sm text-gray-500">
