@@ -113,7 +113,7 @@ export default function Home() {
               See It In Action
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Take a look at how your patches will be documented and organized
+              Take a look at how you can document and organize your modular patches
             </p>
           </div>
           
@@ -134,53 +134,41 @@ export default function Home() {
             </div>
             
             <div className="p-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Patch Overview */}
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-4">Patch Overview</h4>
-                  <div className="space-y-4">
-                    <div>
-                      <h5 className="font-medium text-gray-900 mb-2">Description</h5>
-                      <div className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg">
-                        <ul className="space-y-1">
-                          <li>• Used to explore different "sounds" of scales selected on the Eventide Misha</li>
-                          <li>• Teaches the basics of using a VCO, EG and VCA</li>
-                        </ul>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h5 className="font-medium text-gray-900 mb-2">Tags</h5>
-                      <div className="flex flex-wrap gap-2">
-                        <span className="px-2 py-1 bg-primary-100 text-primary-700 text-xs rounded-full">sequencer</span>
-                        <span className="px-2 py-1 bg-primary-100 text-primary-700 text-xs rounded-full">basics</span>
-                      </div>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Easy Markup */}
+                <div className="text-center">
+                  <div className="bg-gray-100 rounded-lg aspect-[4/3] mb-4 flex items-center justify-center border-2 border-dashed border-gray-300">
+                    <div className="text-center">
+                      <FileText className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                      <p className="text-sm text-gray-500">Easy Markup Screenshot</p>
                     </div>
                   </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Easy Markup</h3>
+                  <p className="text-sm text-gray-600">Write descriptions, instructions, and notes with markdown support for rich formatting</p>
                 </div>
-                
-                {/* Modules Used Preview */}
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-4">Modules Used (5)</h4>
-                  <div className="space-y-2">
-                    {[
-                      { name: "A-141-2 VCADSR", manufacturer: "Doepfer", type: "ADSR Envelope" },
-                      { name: "A-135-2 Quad VCA", manufacturer: "Doepfer", type: "VCA/Mixer" },
-                      { name: "Pico VCO2", manufacturer: "Erica Synths", type: "VCO" },
-                      { name: "Pico VC EG", manufacturer: "Erica Synths", type: "Envelope" },
-                      { name: "Misha", manufacturer: "Eventide", type: "Sequencer" }
-                    ].map((module, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div>
-                          <div className="font-medium text-sm text-gray-900">{module.name}</div>
-                          <div className="text-xs text-gray-600">{module.manufacturer}</div>
-                        </div>
-                        <span className="px-2 py-1 bg-primary-100 text-primary-700 text-xs rounded-full">
-                          {module.type}
-                        </span>
-                      </div>
-                    ))}
+
+                {/* Patch Editor */}
+                <div className="text-center">
+                  <div className="bg-gray-100 rounded-lg aspect-[4/3] mb-4 flex items-center justify-center border-2 border-dashed border-gray-300">
+                    <div className="text-center">
+                      <Network className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                      <p className="text-sm text-gray-500">Patch Editor Screenshot</p>
+                    </div>
                   </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Visual Patch Editor</h3>
+                  <p className="text-sm text-gray-600">Create interactive patch diagrams with drag-and-drop modules and cable connections</p>
+                </div>
+
+                {/* Explore and Like */}
+                <div className="text-center">
+                  <div className="bg-gray-100 rounded-lg aspect-[4/3] mb-4 flex items-center justify-center border-2 border-dashed border-gray-300">
+                    <div className="text-center">
+                      <Music className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                      <p className="text-sm text-gray-500">Community Screenshot</p>
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Explore & Share</h3>
+                  <p className="text-sm text-gray-600">Discover shared patches from the community and like your favorites</p>
                 </div>
               </div>
             </div>
