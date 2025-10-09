@@ -186,7 +186,7 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
   }, []);
 
   // Handle selecting shapes
-  const handleStageClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
+  const handleStageClick = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
     const clickedOnEmpty = e.target === e.target.getStage();
     
     if (clickedOnEmpty) {
@@ -195,8 +195,17 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
     }
 
     const clickedId = e.target.id();
-    if (clickedId && clickedId.startsWith('symbol-')) {
+    if (clickedId && (clickedId.startsWith('symbol-') || clickedId.startsWith('cable-'))) {
       setSelectedId(clickedId);
+    }
+  };
+
+  // Handle touch events for selection (separate from cable drawing)
+  const handleStageTouchStart = (e: Konva.KonvaEventObject<TouchEvent>) => {
+    // Only handle selection if not in cable drawing mode
+    if (tool === 'select') {
+      // Don't prevent default for selection touches
+      handleStageClick(e as any);
     }
   };
 
@@ -229,7 +238,7 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
   const handleCanvasMouseDown = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
     if (tool !== 'cable') return;
     
-    // Prevent default touch behavior to avoid conflicts
+    // Only prevent default touch behavior when actually drawing cables
     if (e.evt.type === 'touchstart') {
       e.evt.preventDefault();
     }
@@ -391,7 +400,7 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
         <div className="flex items-center justify-between p-2 sm:p-4 border-b">
           <div className="flex items-center gap-2">
             <h2 className="text-base sm:text-2xl font-bold text-gray-900">
-              {isMobile ? 'Schema' : 'Patch Schema Editor'}
+              {isMobile ? 'Schema Editor' : 'Patch Schema Editor'}
             </h2>
           </div>
           <div className="flex items-center gap-1 sm:gap-2">
@@ -611,10 +620,11 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
                   draggable={false}
                   ref={stageRef}
                   onClick={handleStageClick}
+                  onTap={handleStageClick}
                   onMouseDown={handleCanvasMouseDown}
                   onMouseMove={handleCanvasMouseMove}
                   onMouseUp={handleCanvasMouseUp}
-                  onTouchStart={handleCanvasMouseDown}
+                  onTouchStart={tool === 'cable' ? handleCanvasMouseDown : handleStageTouchStart}
                   onTouchMove={handleCanvasMouseMove}
                   onTouchEnd={handleCanvasMouseUp}
                 >
@@ -648,6 +658,7 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
                         lineCap="round"
                         lineJoin="round"
                         onClick={() => setSelectedId(cable.id)}
+                        onTap={() => setSelectedId(cable.id)}
                         opacity={selectedId === cable.id ? 0.7 : 1}
                       />
                     ))}
@@ -691,6 +702,7 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
                             };
                           }}
                           onClick={() => setSelectedId(symbol.id)}
+                          onTap={() => setSelectedId(symbol.id)}
                           onDragEnd={(e) => handleSymbolDragEnd(symbol.id, e.target.x(), e.target.y())}
                           shadowColor={selectedId === symbol.id ? 'blue' : 'transparent'}
                           shadowBlur={selectedId === symbol.id ? 10 : 0}
@@ -707,7 +719,7 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
             <div className="p-3 bg-blue-50 border-t text-sm text-gray-700">
               <strong>Instructions:</strong> 
               {tool === 'select' ? (
-                <span> Click and drag symbols to move them. Click on symbols or cables to select them.</span>
+                <span> Click symbol to add. Drag symbols to move. Click on symbols or cables to select and delete them.</span>
               ) : (
                 <span> Click and drag on the canvas to draw cables. Choose cable type using the colored buttons above.</span>
               )}
@@ -723,6 +735,14 @@ export default function PatchSchemaEditor({ initialSchema, onSave, onClose }: Pa
                   CC BY-ND 4.0
                 </a>
               </span>
+              {isMobile && (
+                <>
+                  <br />
+                  <div className="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-yellow-800 text-xs">
+                    <strong>Note:</strong> Editor works best on Desktop screen
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

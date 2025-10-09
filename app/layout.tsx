@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'),
   title: {
-    default: "Synth Patch Library - Document Your Modular Synthesis Patches",
+    default: "Synth Patch Library",
     template: "%s | Synth Patch Library"
   },
   description: "Free online tool for documenting and organizing your modular synthesizer patches. Add images, audio, patch diagrams, tags, and detailed notes. Build your personal patch library today.",

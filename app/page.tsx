@@ -5,7 +5,7 @@ import { Music, FileText, Image, Volume2, Tags, Network } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Home - Free Modular Synth Patch Documentation Tool",
+  title: "Synth Patch Library",
   description: "Document and organize your modular synthesizer patches with images, audio, visual diagrams, tags and detailed notes. Free online patch library for eurorack and modular synth enthusiasts.",
   openGraph: {
     title: "Synth Patch Library - Document Your Modular Synthesis Patches",
