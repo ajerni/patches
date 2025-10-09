@@ -46,7 +46,7 @@ export function ModuleSelector({ selectedModuleIds, onModulesChange }: ModuleSel
     return (
       module.manufacturer.toLowerCase().includes(searchLower) ||
       module.name.toLowerCase().includes(searchLower) ||
-      module.type?.toLowerCase().includes(searchLower)
+      module.types?.some(type => type.toLowerCase().includes(searchLower))
     );
   });
 
