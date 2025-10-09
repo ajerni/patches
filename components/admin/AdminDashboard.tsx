@@ -235,9 +235,13 @@ export function AdminDashboard() {
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-medium text-gray-900">{patch.title}</p>
                       {patch.private ? (
-                        <EyeOff className="h-3 w-3 text-gray-400" title="Private" />
+                        <span title="Private">
+                          <EyeOff className="h-3 w-3 text-gray-400" />
+                        </span>
                       ) : (
-                        <Eye className="h-3 w-3 text-green-500" title="Public" />
+                        <span title="Public">
+                          <Eye className="h-3 w-3 text-green-500" />
+                        </span>
                       )}
                     </div>
                     <p className="text-xs text-gray-500">by {patch.user.name}</p>
