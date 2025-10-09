@@ -93,7 +93,7 @@ export function generateModuleStructuredData(module: {
   id: string;
   name: string;
   manufacturer: string;
-  types: string[];
+  types?: string[];
   notes?: string;
   images: string[];
   createdAt: string;
@@ -112,11 +112,11 @@ export function generateModuleStructuredData(module: {
       "name": module.manufacturer
     },
     "category": "Modular Synthesizer Module",
-    "additionalProperty": module.types.map(type => ({
+    "additionalProperty": module.types?.map(type => ({
       "@type": "PropertyValue",
       "name": "Type",
       "value": type
-    })),
+    })) || [],
     "image": module.images.length > 0 ? module.images[0] : undefined,
     "url": `${baseUrl}/modules/${module.id}`,
     "dateCreated": module.createdAt,
