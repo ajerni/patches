@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { Edit, ArrowLeft, Boxes, Calendar, Image as ImageIcon, Music } from "lucide-react";
 import Image from "next/image";
+import ReactMarkdown from "react-markdown";
 
 interface Module {
   id: string;
@@ -165,19 +166,24 @@ export default function ModuleDetailPage({ params }: { params: { id: string } })
             <div className="p-4 sm:p-6 bg-gray-50/50">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                 {module.images.map((imageUrl, idx) => (
-                  <div
+                  <a
                     key={idx}
-                    className="relative aspect-square rounded-lg border-2 border-gray-200 bg-white mt-2 mb-2 p-4"
+                    href={imageUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block group"
                   >
-                    <div className="relative w-full h-full overflow-hidden rounded-md">
-                      <Image
-                        src={imageUrl}
-                        alt={`${module.name} - Image ${idx + 1}`}
-                        fill
-                        className="object-contain"
-                      />
+                    <div className="relative aspect-square rounded-lg border-2 border-gray-200 bg-white mt-2 mb-2 p-4 group-hover:border-primary-400 group-hover:shadow-lg transition-all duration-200">
+                      <div className="relative w-full h-full overflow-hidden rounded-md">
+                        <Image
+                          src={imageUrl}
+                          alt={`${module.name} - Image ${idx + 1}`}
+                          fill
+                          className="object-contain"
+                        />
+                      </div>
                     </div>
-                  </div>
+                  </a>
                 ))}
               </div>
             </div>
@@ -242,7 +248,9 @@ export default function ModuleDetailPage({ params }: { params: { id: string } })
                           {patch.private ? 'Private' : 'Public'}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">{patch.description}</p>
+                      <div className="text-sm text-gray-600 mt-1 line-clamp-2 prose prose-sm max-w-none prose-p:text-gray-600 prose-headings:text-gray-900 prose-ul:text-gray-600 prose-li:text-gray-600">
+                        <ReactMarkdown>{patch.description}</ReactMarkdown>
+                      </div>
                       {patch.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-2">
                           {patch.tags.slice(0, 2).map((tag) => (

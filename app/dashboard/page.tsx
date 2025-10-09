@@ -8,6 +8,7 @@ import Image from "next/image";
 import { Navbar } from "@/components/Navbar";
 import { Pagination } from "@/components/Pagination";
 import { Plus, Search, Music, Edit, Trash2 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 interface Patch {
   id: string;
@@ -207,9 +208,9 @@ export default function DashboardPage() {
                       {patch.private ? 'Private' : 'Public'}
                     </span>
                   </div>
-                  <p className="text-gray-600 mb-4 line-clamp-2">
-                    {patch.description}
-                  </p>
+                  <div className="text-gray-600 mb-4 line-clamp-2 prose prose-sm max-w-none prose-p:text-gray-600 prose-headings:text-gray-900 prose-ul:text-gray-600 prose-li:text-gray-600">
+                    <ReactMarkdown>{patch.description}</ReactMarkdown>
+                  </div>
 
                   {patch.tags.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-4">

@@ -8,6 +8,7 @@ import Image from "next/image";
 import { Navbar } from "@/components/Navbar";
 import { VirtualPatchGrid } from "@/components/VirtualPatchGrid";
 import { Search, Music, Calendar, User, Tag, Loader2, SortAsc, SortDesc, Heart } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 interface SharedPatch {
   id: string;
@@ -432,9 +433,9 @@ export default function SharedPatchesPage() {
                           <span className="truncate">{patch.user.name}</span>
                         </div>
                         
-                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                          {patch.description}
-                        </p>
+                        <div className="text-sm text-gray-600 mb-3 line-clamp-2 prose prose-sm max-w-none prose-p:text-gray-600 prose-headings:text-gray-900 prose-ul:text-gray-600 prose-li:text-gray-600">
+                          <ReactMarkdown>{patch.description}</ReactMarkdown>
+                        </div>
                       </Link>
 
                       {/* Tags */}

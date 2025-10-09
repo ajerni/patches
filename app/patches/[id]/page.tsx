@@ -9,6 +9,7 @@ import { HearthisEmbed } from "@/components/HearthisEmbed";
 import { Edit, ArrowLeft, Music, Calendar, Tag, Image as ImageIcon, Volume2, Boxes, Network } from "lucide-react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
+import ReactMarkdown from "react-markdown";
 
 // Dynamically import PatchSchemaViewer to avoid SSR issues
 const PatchSchemaViewer = dynamic(() => import("@/components/PatchSchemaViewer"), {
@@ -177,7 +178,9 @@ export default function PatchDetailPage({ params }: { params: { id: string } }) 
           {/* Description */}
           <div className="px-4 sm:px-8 py-4 sm:py-6 border-b border-gray-200">
           <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Description</h2>
-          <p className="text-sm sm:text-base text-gray-700 whitespace-pre-wrap">{patch.description}</p>
+          <div className="text-sm sm:text-base text-gray-700 prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-ul:text-gray-700 prose-li:text-gray-700">
+            <ReactMarkdown>{patch.description}</ReactMarkdown>
+          </div>
         </div>
 
           {/* Modules Used */}
@@ -274,7 +277,9 @@ export default function PatchDetailPage({ params }: { params: { id: string } }) 
           {patch.instructions && (
             <div className="px-4 sm:px-8 py-4 sm:py-6 border-b border-gray-200">
               <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Instructions</h2>
-              <p className="text-sm sm:text-base text-gray-700 whitespace-pre-wrap">{patch.instructions}</p>
+              <div className="text-sm sm:text-base text-gray-700 prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-ul:text-gray-700 prose-li:text-gray-700">
+                <ReactMarkdown>{patch.instructions}</ReactMarkdown>
+              </div>
             </div>
           )}
 
@@ -282,7 +287,9 @@ export default function PatchDetailPage({ params }: { params: { id: string } }) 
           {patch.notes && (
             <div className="px-4 sm:px-8 py-4 sm:py-6 border-b border-gray-200">
               <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">Notes</h2>
-              <p className="text-sm sm:text-base text-gray-700 whitespace-pre-wrap">{patch.notes}</p>
+              <div className="text-sm sm:text-base text-gray-700 prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-ul:text-gray-700 prose-li:text-gray-700">
+                <ReactMarkdown>{patch.notes}</ReactMarkdown>
+              </div>
             </div>
           )}
 
