@@ -136,7 +136,13 @@ export default function Home() {
             <div className="p-6">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Easy Markup */}
-                <div className="text-center">
+                <div className="text-center flex flex-col lg:block">
+                  {/* Mobile: Title first */}
+                  <div className="lg:hidden mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Easy Formatting</h3>
+                    <p className="text-sm text-gray-600">Markdown support integrated</p>
+                  </div>
+                  
                   <div className="bg-white rounded-lg aspect-[4/3] mb-4 p-4 border border-gray-200 shadow-sm overflow-hidden">
                     <div className="w-full h-full overflow-y-auto">
                       <table className="w-full text-xs">
@@ -236,12 +242,22 @@ export default function Home() {
                       </table>
                     </div>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Easy Markup</h3>
-                  <p className="text-sm text-gray-600">Markdown support for rich formatting</p>
+                  
+                  {/* Desktop: Title after image */}
+                  <div className="hidden lg:block">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Easy Markup</h3>
+                    <p className="text-sm text-gray-600">Markdown support for rich formatting</p>
+                  </div>
                 </div>
 
                 {/* Patch Editor */}
-                <div className="text-center">
+                <div className="text-center flex flex-col lg:block">
+                  {/* Mobile: Title first */}
+                  <div className="lg:hidden mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Interactive Patch Editor</h3>
+                    <p className="text-sm text-gray-600">Create patch diagrams with drag-and-drop</p>
+                  </div>
+                  
                   <div className="bg-white rounded-lg aspect-[4/3] mb-4 border border-gray-200 shadow-sm relative p-4">
                     <img 
                       src="/screenshots/editor.webp" 
@@ -249,12 +265,22 @@ export default function Home() {
                       className="w-full h-full object-contain rounded"
                     />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Interactive Patch Editor</h3>
-                  <p className="text-sm text-gray-600">Create patch diagrams with drag-and-drop</p>
+                  
+                  {/* Desktop: Title after image */}
+                  <div className="hidden lg:block">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Interactive Patch Editor</h3>
+                    <p className="text-sm text-gray-600">Create patch diagrams with drag-and-drop</p>
+                  </div>
                 </div>
 
                 {/* Explore and Like */}
-                <div className="text-center">
+                <div className="text-center flex flex-col lg:block">
+                  {/* Mobile: Title first */}
+                  <div className="lg:hidden mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Explore & Share</h3>
+                    <p className="text-sm text-gray-600">Discover shared patches from the community</p>
+                  </div>
+                  
                   <div className="bg-white rounded-lg aspect-[4/3] mb-4 border border-gray-200 shadow-sm relative p-4">
                     <img 
                       src="/screenshots/sharedpatch.webp" 
@@ -262,8 +288,12 @@ export default function Home() {
                       className="w-full h-full object-contain rounded"
                     />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Explore & Share</h3>
-                  <p className="text-sm text-gray-600">Discover shared patches from the community</p>
+                  
+                  {/* Desktop: Title after image */}
+                  <div className="hidden lg:block">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Explore & Share</h3>
+                    <p className="text-sm text-gray-600">Discover shared patches from the community</p>
+                  </div>
                 </div>
               </div>
             </div>
