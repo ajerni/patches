@@ -95,7 +95,7 @@ export function generateModuleStructuredData(module: {
   manufacturer: string;
   types?: string[];
   notes?: string;
-  images: string[];
+  images?: string[];
   createdAt: string;
   updatedAt: string;
   user: { name: string };
@@ -117,7 +117,7 @@ export function generateModuleStructuredData(module: {
       "name": "Type",
       "value": type
     })) || [],
-    "image": module.images.length > 0 ? module.images[0] : undefined,
+    "image": module.images && module.images.length > 0 ? module.images[0] : undefined,
     "url": `${baseUrl}/modules/${module.id}`,
     "dateCreated": module.createdAt,
     "dateModified": module.updatedAt,
