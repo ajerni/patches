@@ -197,54 +197,72 @@ export default function PatchDetailPage({ params }: { params: { id: string } }) 
             </div>
             <div className="p-4 sm:p-6 bg-gray-50/50">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
-                {patch.patchModules.map(({ module }) => (
-                  <Link
-                    key={module.id}
-                    href={`/modules/${module.id}`}
-                    className="bg-white border border-gray-200 rounded-lg hover:border-primary-400 hover:shadow-md transition-all duration-200 group flex overflow-hidden h-20"
-                  >
-                    {/* Module Info - Left Side */}
-                    <div className="flex-1 p-3 flex flex-col justify-center min-w-0">
-                      <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition text-sm truncate">
-                        {module.name}
-                      </h3>
-                      <p className="text-xs text-gray-600 truncate">{module.manufacturer}</p>
-                      {module.types && module.types.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {module.types.slice(0, 2).map((type) => (
-                            <span
-                              key={type}
-                              className="inline-block px-1.5 py-0.5 bg-primary-50 text-primary-700 rounded text-[10px] font-medium"
-                            >
-                              {type}
-                            </span>
-                          ))}
-                          {module.types.length > 2 && (
-                            <span className="inline-block px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-[10px] font-medium">
-                              +{module.types.length - 2}
-                            </span>
-                          )}
+                {patch.patchModules.map(({ module }) => {
+                  const isOwner = session?.user?.id === patch.userId;
+                  
+                  const moduleCard = (
+                    <div className={`bg-white border border-gray-200 rounded-lg flex overflow-hidden h-20 ${
+                      isOwner 
+                        ? 'hover:border-primary-400 hover:shadow-md transition-all duration-200 group cursor-pointer' 
+                        : 'cursor-default'
+                    }`}>
+                      {/* Module Info - Left Side */}
+                      <div className="flex-1 p-3 flex flex-col justify-center min-w-0">
+                        <h3 className={`font-semibold text-gray-900 text-sm truncate ${
+                          isOwner ? 'group-hover:text-primary-600 transition' : ''
+                        }`}>
+                          {module.name}
+                        </h3>
+                        <p className="text-xs text-gray-600 truncate">{module.manufacturer}</p>
+                        {module.types && module.types.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {module.types.slice(0, 2).map((type) => (
+                              <span
+                                key={type}
+                                className="inline-block px-1.5 py-0.5 bg-primary-50 text-primary-700 rounded text-[10px] font-medium"
+                              >
+                                {type}
+                              </span>
+                            ))}
+                            {module.types.length > 2 && (
+                              <span className="inline-block px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-[10px] font-medium">
+                                +{module.types.length - 2}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Module Image - Right Side (Portrait) */}
+                      {module.images && module.images.length > 0 ? (
+                        <div className="relative w-16 h-20 flex-shrink-0 bg-gray-100">
+                          <Image
+                            src={module.images[0]}
+                            alt={module.name}
+                            fill
+                            className={`object-cover ${
+                              isOwner ? 'group-hover:scale-105 transition duration-300' : ''
+                            }`}
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-16 h-20 flex-shrink-0 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                          <Boxes className="h-5 w-5 text-gray-400" />
                         </div>
                       )}
                     </div>
+                  );
 
-                    {/* Module Image - Right Side (Portrait) */}
-                    {module.images && module.images.length > 0 ? (
-                      <div className="relative w-16 h-20 flex-shrink-0 bg-gray-100">
-                        <Image
-                          src={module.images[0]}
-                          alt={module.name}
-                          fill
-                          className="object-cover group-hover:scale-105 transition duration-300"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-16 h-20 flex-shrink-0 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                        <Boxes className="h-5 w-5 text-gray-400" />
-                      </div>
-                    )}
-                  </Link>
-                ))}
+                  return isOwner ? (
+                    <Link key={module.id} href={`/modules/${module.id}`}>
+                      {moduleCard}
+                    </Link>
+                  ) : (
+                    <div key={module.id}>
+                      {moduleCard}
+                    </div>
+                  );
+                })}
               </div>
             </div>
             </div>
