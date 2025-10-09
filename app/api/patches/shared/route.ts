@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 
 interface SharedPatchesQuery {
   search?: string;
-  sortBy?: 'date' | 'alphabetical';
+  sortBy?: 'date' | 'alphabetical' | 'likes';
   sortOrder?: 'asc' | 'desc';
   page?: number;
   limit?: number;
@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     
     // Parse query parameters
     const search = searchParams.get('search') || undefined;
-    const sortBy = (searchParams.get('sortBy') as 'date' | 'alphabetical') || 'date';
+    const sortBy = (searchParams.get('sortBy') as 'date' | 'alphabetical' | 'likes') || 'date';
     const sortOrder = (searchParams.get('sortOrder') as 'asc' | 'desc') || 'desc';
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
@@ -89,6 +89,8 @@ export async function GET(request: Request) {
       orderBy.updatedAt = sortOrder;
     } else if (sortBy === 'alphabetical') {
       orderBy.title = sortOrder;
+    } else if (sortBy === 'likes') {
+      orderBy.likeCount = sortOrder;
     }
     
     // For tag partial matching, we need to use raw SQL
@@ -100,7 +102,12 @@ export async function GET(request: Request) {
         // Use raw SQL for comprehensive tag search including partial matches
         const searchPattern = `%${search}%`;
         
-        const orderByField = sortBy === 'alphabetical' ? 'p.title' : 'p."updatedAt"';
+        let orderByField = 'p."updatedAt"';
+        if (sortBy === 'alphabetical') {
+          orderByField = 'p.title';
+        } else if (sortBy === 'likes') {
+          orderByField = 'p.like_count';
+        }
         const orderDirection = sortOrder === 'desc' ? 'DESC' : 'ASC';
         
         // Build cursor condition for better performance with large datasets
@@ -109,6 +116,9 @@ export async function GET(request: Request) {
           if (sortBy === 'alphabetical') {
             const comparison = sortOrder === 'desc' ? '<' : '>';
             cursorCondition = `AND p.title ${comparison} '${cursor}'`;
+          } else if (sortBy === 'likes') {
+            const comparison = sortOrder === 'desc' ? '<' : '>';
+            cursorCondition = `AND p.like_count ${comparison} ${cursor}`;
           } else {
             const comparison = sortOrder === 'desc' ? '<' : '>';
             cursorCondition = `AND p."updatedAt" ${comparison} '${cursor}'`;

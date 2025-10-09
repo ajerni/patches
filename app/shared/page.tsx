@@ -50,7 +50,7 @@ export default function SharedPatchesPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [searching, setSearching] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState<'date' | 'alphabetical'>('date');
+  const [sortBy, setSortBy] = useState<'date' | 'alphabetical' | 'likes'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [pagination, setPagination] = useState<PaginationState | null>(null);
   const [error, setError] = useState("");
@@ -214,7 +214,7 @@ export default function SharedPatchesPage() {
   };
 
   // Handle sort change
-  const handleSortChange = (newSortBy: 'date' | 'alphabetical') => {
+  const handleSortChange = (newSortBy: 'date' | 'alphabetical' | 'likes') => {
     if (sortBy === newSortBy) {
       setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
     } else {
@@ -354,6 +354,21 @@ export default function SharedPatchesPage() {
               >
                 <span>A-Z</span>
                 {sortBy === 'alphabetical' && (
+                  sortOrder === 'desc' ? <SortDesc className="h-4 w-4" /> : <SortAsc className="h-4 w-4" />
+                )}
+              </button>
+              
+              <button
+                onClick={() => handleSortChange('likes')}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition ${
+                  sortBy === 'likes'
+                    ? 'bg-primary-50 border-primary-200 text-primary-700'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <Heart className="h-4 w-4" />
+                <span>Most Liked</span>
+                {sortBy === 'likes' && (
                   sortOrder === 'desc' ? <SortDesc className="h-4 w-4" /> : <SortAsc className="h-4 w-4" />
                 )}
               </button>

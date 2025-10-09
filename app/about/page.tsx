@@ -283,23 +283,25 @@ function ContactFormContent() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* PayPal Donation */}
             <div className="border border-gray-200 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Donate via PayPal</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Donate via PayPal or Credit Card</h3>
               <p className="text-sm text-gray-600 mb-4">
-                Support us with a donation through PayPal.
+                Support us with a donation via PayPal.
               </p>
               <form action="https://www.paypal.com/donate" method="post" target="_top">
                 <input type="hidden" name="business" value="RPUSXUVPEDRWC" />
                 <input type="hidden" name="no_recurring" value="0" />
                 <input type="hidden" name="item_name" value="founder of Synth Patch Library" />
-                <input type="hidden" name="currency_code" value="CHF" />
-                <input 
-                  type="image" 
-                  src="https://www.paypalobjects.com/en_US/CH/i/btn/btn_donateCC_LG.gif"
-                  name="submit" 
-                  title="PayPal - The safer, easier way to pay online!" 
-                  alt="Donate with PayPal button"
-                  className="border-0 hover:opacity-80 transition-opacity"
-                />
+                <input type="hidden" name="currency_code" value="USD" />
+                <input type="hidden" name="lc" value="US" />
+                <input type="hidden" name="cmd" value="_donations" />
+                <button
+                  type="submit"
+                  name="submit"
+                  title="PayPal - The safer, easier way to pay online!"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
+                >
+                  Donate
+                </button>
                 <img 
                   alt="" 
                   src="https://www.paypal.com/en_CH/i/scr/pixel.gif" 
