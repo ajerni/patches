@@ -137,38 +137,133 @@ export default function Home() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Easy Markup */}
                 <div className="text-center">
-                  <div className="bg-gray-100 rounded-lg aspect-[4/3] mb-4 flex items-center justify-center border-2 border-dashed border-gray-300">
-                    <div className="text-center">
-                      <FileText className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-500">Easy Markup Screenshot</p>
+                  <div className="bg-white rounded-lg aspect-[4/3] mb-4 p-4 border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="w-full h-full overflow-y-auto">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="bg-gray-50">
+                            <th className="text-left p-2 font-semibold text-gray-700">Element</th>
+                            <th className="text-left p-2 font-semibold text-gray-700">Markdown Syntax</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="bg-white">
+                            <td className="p-2">
+                              <a href="https://www.markdownguide.org/basic-syntax/#headings" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">
+                                Heading
+                              </a>
+                            </td>
+                            <td className="p-2 font-mono text-gray-800">
+                              <div># H1</div>
+                              <div>## H2</div>
+                              <div>### H3</div>
+                            </td>
+                          </tr>
+                          <tr className="bg-gray-50">
+                            <td className="p-2">
+                              <a href="https://www.markdownguide.org/basic-syntax/#emphasis" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">
+                                Bold
+                              </a>
+                            </td>
+                            <td className="p-2 font-mono text-gray-800">**bold text**</td>
+                          </tr>
+                          <tr className="bg-white">
+                            <td className="p-2">
+                              <a href="https://www.markdownguide.org/basic-syntax/#italic" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">
+                                Italic
+                              </a>
+                            </td>
+                            <td className="p-2 font-mono text-gray-800">*italicized text*</td>
+                          </tr>
+                          <tr className="bg-gray-50">
+                            <td className="p-2">
+                              <a href="https://www.markdownguide.org/basic-syntax/#blockquotes-1" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">
+                                Blockquote
+                              </a>
+                            </td>
+                            <td className="p-2 font-mono text-gray-800">&gt; blockquote</td>
+                          </tr>
+                          <tr className="bg-white">
+                            <td className="p-2">
+                              <a href="https://www.markdownguide.org/basic-syntax/#ordered-lists" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">
+                                Ordered List
+                              </a>
+                            </td>
+                            <td className="p-2 font-mono text-gray-800">
+                              <div>1. First item</div>
+                              <div>2. Second item</div>
+                              <div>3. Third item</div>
+                            </td>
+                          </tr>
+                          <tr className="bg-gray-50">
+                            <td className="p-2">
+                              <a href="https://www.markdownguide.org/basic-syntax/#unordered-lists" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">
+                                Unordered List
+                              </a>
+                            </td>
+                            <td className="p-2 font-mono text-gray-800">
+                              <div>- First item</div>
+                              <div>- Second item</div>
+                              <div>- Third item</div>
+                            </td>
+                          </tr>
+                          <tr className="bg-white">
+                            <td className="p-2">
+                              <a href="https://www.markdownguide.org/basic-syntax/#code" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">
+                                Code
+                              </a>
+                            </td>
+                            <td className="p-2 font-mono text-gray-800">`code`</td>
+                          </tr>
+                          <tr className="bg-gray-50">
+                            <td className="p-2">
+                              <a href="https://www.markdownguide.org/basic-syntax/#horizontal-rules" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">
+                                Horizontal Rule
+                              </a>
+                            </td>
+                            <td className="p-2 font-mono text-gray-800">---</td>
+                          </tr>
+                          <tr className="bg-white">
+                            <td className="p-2">
+                              <a href="https://www.markdownguide.org/basic-syntax/#links" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">
+                                Link
+                              </a>
+                            </td>
+                            <td className="p-2 font-mono text-gray-800">[title](https://www.example.com)</td>
+                          </tr>
+                         
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">Easy Markup</h3>
-                  <p className="text-sm text-gray-600">Write descriptions, instructions, and notes with markdown support for rich formatting</p>
+                  <p className="text-sm text-gray-600">Markdown support for rich formatting</p>
                 </div>
 
                 {/* Patch Editor */}
                 <div className="text-center">
-                  <div className="bg-gray-100 rounded-lg aspect-[4/3] mb-4 flex items-center justify-center border-2 border-dashed border-gray-300">
-                    <div className="text-center">
-                      <Network className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-500">Patch Editor Screenshot</p>
-                    </div>
+                  <div className="bg-white rounded-lg aspect-[4/3] mb-4 border border-gray-200 shadow-sm relative p-4">
+                    <img 
+                      src="/screenshots/editor.webp" 
+                      alt="Visual Patch Editor Screenshot"
+                      className="w-full h-full object-contain rounded"
+                    />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Visual Patch Editor</h3>
-                  <p className="text-sm text-gray-600">Create interactive patch diagrams with drag-and-drop modules and cable connections</p>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Interactive Patch Editor</h3>
+                  <p className="text-sm text-gray-600">Create patch diagrams with drag-and-drop</p>
                 </div>
 
                 {/* Explore and Like */}
                 <div className="text-center">
-                  <div className="bg-gray-100 rounded-lg aspect-[4/3] mb-4 flex items-center justify-center border-2 border-dashed border-gray-300">
-                    <div className="text-center">
-                      <Music className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-500">Community Screenshot</p>
-                    </div>
+                  <div className="bg-white rounded-lg aspect-[4/3] mb-4 border border-gray-200 shadow-sm relative p-4">
+                    <img 
+                      src="/screenshots/sharedpatch.webp" 
+                      alt="Community Screenshot"
+                      className="w-full h-full object-contain rounded"
+                    />
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">Explore & Share</h3>
-                  <p className="text-sm text-gray-600">Discover shared patches from the community and like your favorites</p>
+                  <p className="text-sm text-gray-600">Discover shared patches from the community</p>
                 </div>
               </div>
             </div>
@@ -181,7 +276,7 @@ export default function Home() {
             Start Building Your Patch Library Today
           </h2>
           <p className="text-base sm:text-lg mb-6 opacity-90 px-2">
-            Join the community of modular synthesists documenting their creative work
+            Join the community of modular synthesizer enthusiasts documenting their creative work
           </p>
           <Link
             href="/register"
