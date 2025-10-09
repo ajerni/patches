@@ -32,7 +32,7 @@ interface PatchFormProps {
         id: string;
         manufacturer: string;
         name: string;
-        type?: string;
+        types?: string[];
       };
     }>;
   };

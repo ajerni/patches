@@ -13,7 +13,7 @@ interface Module {
   id: string;
   manufacturer: string;
   name: string;
-  type?: string;
+  types?: string[];
   notes?: string;
   images?: string[];
   createdAt: string;
@@ -74,7 +74,7 @@ export default function ModulesPage() {
   const filteredModules = modules.filter((module) =>
     module.manufacturer.toLowerCase().includes(searchTerm.toLowerCase()) ||
     module.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    module.type?.toLowerCase().includes(searchTerm.toLowerCase())
+    module.types?.some(type => type.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   // Reset to page 1 when search term changes
@@ -186,7 +186,7 @@ export default function ModulesPage() {
               {paginatedModules.map((module) => (
               <div
                 key={module.id}
-                className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition group"
+                className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
               >
                 <div className="flex">
                   {/* Module Info - Left Side */}
@@ -194,15 +194,27 @@ export default function ModulesPage() {
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex-1">
                         <Link href={`/modules/${module.id}`}>
-                          <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-primary-600 transition">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2">
                             {module.name}
                           </h3>
                         </Link>
                         <p className="text-sm text-gray-500 mb-2">{module.manufacturer}</p>
-                        {module.type && (
-                          <span className="inline-block px-2 py-1 bg-primary-100 text-primary-700 text-xs rounded-full">
-                            {module.type}
-                          </span>
+                        {module.types && module.types.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-2">
+                            {module.types.slice(0, 2).map((type) => (
+                              <span
+                                key={type}
+                                className="inline-block px-2 py-1 bg-primary-100 text-primary-700 text-xs rounded-full"
+                              >
+                                {type}
+                              </span>
+                            ))}
+                            {module.types.length > 2 && (
+                              <span className="inline-block px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                                +{module.types.length - 2}
+                              </span>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -238,18 +250,18 @@ export default function ModulesPage() {
                   </div>
 
                   {/* Module Image - Right Side (Portrait) */}
-                  <Link href={`/modules/${module.id}`} className="flex-shrink-0">
+                  <Link href={`/modules/${module.id}`} className="flex-shrink-0 p-3">
                     {module.images && module.images.length > 0 ? (
-                      <div className="relative w-24 sm:w-32 h-full bg-gray-100 overflow-hidden">
+                      <div className="relative w-24 sm:w-32 h-full bg-gray-100 rounded-lg overflow-hidden">
                         <Image
                           src={module.images[0]}
                           alt={module.name}
                           fill
-                          className="object-cover group-hover:scale-105 transition duration-300"
+                          className="object-cover"
                         />
                       </div>
                     ) : (
-                      <div className="w-24 sm:w-32 h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                      <div className="w-24 sm:w-32 h-full bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center">
                         <Boxes className="h-8 sm:h-12 w-8 sm:w-12 text-gray-400" />
                       </div>
                     )}

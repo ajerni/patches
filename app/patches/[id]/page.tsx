@@ -33,7 +33,7 @@ interface Patch {
       id: string;
       manufacturer: string;
       name: string;
-      type?: string;
+      types?: string[];
       images?: string[];
     };
   }>;
@@ -206,10 +206,22 @@ export default function PatchDetailPage({ params }: { params: { id: string } }) 
                         {module.name}
                       </h3>
                       <p className="text-xs text-gray-600 truncate">{module.manufacturer}</p>
-                      {module.type && (
-                        <span className="inline-block px-1.5 py-0.5 bg-primary-50 text-primary-700 rounded text-[10px] w-fit mt-1 font-medium">
-                          {module.type}
-                        </span>
+                      {module.types && module.types.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {module.types.slice(0, 2).map((type) => (
+                            <span
+                              key={type}
+                              className="inline-block px-1.5 py-0.5 bg-primary-50 text-primary-700 rounded text-[10px] font-medium"
+                            >
+                              {type}
+                            </span>
+                          ))}
+                          {module.types.length > 2 && (
+                            <span className="inline-block px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-[10px] font-medium">
+                              +{module.types.length - 2}
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
 

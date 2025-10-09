@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, X, Plus } from "lucide-react";
 import { ImageUpload } from "./ImageUpload";
 
 interface ModuleFormProps {
@@ -10,7 +10,7 @@ interface ModuleFormProps {
     id: string;
     manufacturer: string;
     name: string;
-    type?: string;
+    types?: string[];
     notes?: string;
     images?: string[];
   };
@@ -24,9 +24,10 @@ export function ModuleForm({ module, isEdit = false }: ModuleFormProps) {
 
   const [manufacturer, setManufacturer] = useState(module?.manufacturer || "");
   const [name, setName] = useState(module?.name || "");
-  const [type, setType] = useState(module?.type || "");
+  const [types, setTypes] = useState<string[]>(module?.types || []);
   const [notes, setNotes] = useState(module?.notes || "");
   const [images, setImages] = useState<string[]>(module?.images || []);
+  const [newType, setNewType] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +37,7 @@ export function ModuleForm({ module, isEdit = false }: ModuleFormProps) {
     const data = {
       manufacturer,
       name,
-      type: type || undefined,
+      types,
       notes: notes || undefined,
       images,
     };
@@ -65,6 +66,17 @@ export function ModuleForm({ module, isEdit = false }: ModuleFormProps) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const addType = () => {
+    if (newType.trim() && !types.includes(newType.trim())) {
+      setTypes([...types, newType.trim()]);
+      setNewType("");
+    }
+  };
+
+  const removeType = (type: string) => {
+    setTypes(types.filter((t) => t !== type));
   };
 
   return (
@@ -107,19 +119,39 @@ export function ModuleForm({ module, isEdit = false }: ModuleFormProps) {
         />
       </div>
 
-      {/* Type */}
+      {/* Types */}
       <div>
-        <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">
-          Type / Category
-        </label>
-        <input
-          id="type"
-          type="text"
-          value={type}
-          onChange={(e) => setType(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-          placeholder="Oscillator, Filter, Utility, Effect, etc."
-        />
+        <label className="block text-sm font-medium text-gray-700 mb-2">Types / Categories</label>
+        <div className="flex gap-2 mb-2">
+          <input
+            type="text"
+            value={newType}
+            onChange={(e) => setNewType(e.target.value)}
+            onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addType())}
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            placeholder="VCO, Filter, ADSR Envelope, LFO, etc."
+          />
+          <button
+            type="button"
+            onClick={addType}
+            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition"
+          >
+            <Plus className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {types.map((type) => (
+            <span
+              key={type}
+              className="flex items-center gap-1 px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm"
+            >
+              {type}
+              <button type="button" onClick={() => removeType(type)}>
+                <X className="h-4 w-4" />
+              </button>
+            </span>
+          ))}
+        </div>
       </div>
 
       {/* Notes */}
@@ -138,7 +170,7 @@ export function ModuleForm({ module, isEdit = false }: ModuleFormProps) {
       </div>
 
       {/* Images */}
-      <div>
+      <div className="mt-12 mb-12">
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Images
         </label>

@@ -12,7 +12,7 @@ interface Module {
   id: string;
   manufacturer: string;
   name: string;
-  type?: string;
+  types?: string[];
   notes?: string;
   images?: string[];
   patchModules?: Array<{
@@ -133,12 +133,19 @@ export default function ModuleDetailPage({ params }: { params: { id: string } })
               </Link>
             </div>
 
-            {/* Type */}
-            {module.type && (
+            {/* Types */}
+            {module.types && module.types.length > 0 && (
               <div className="mt-3">
-                <span className="px-3 py-1 bg-white/20 text-white rounded-full text-sm font-medium backdrop-blur-sm">
-                  {module.type}
-                </span>
+                <div className="flex flex-wrap gap-2">
+                  {module.types.map((type) => (
+                    <span
+                      key={type}
+                      className="px-3 py-1 bg-white/20 text-white rounded-full text-sm font-medium backdrop-blur-sm"
+                    >
+                      {type}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -160,14 +167,16 @@ export default function ModuleDetailPage({ params }: { params: { id: string } })
                 {module.images.map((imageUrl, idx) => (
                   <div
                     key={idx}
-                    className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 bg-white hover:border-primary-400 hover:shadow-lg transition-all duration-200 group"
+                    className="relative aspect-square rounded-lg border-2 border-gray-200 bg-white mt-2 mb-2 p-4"
                   >
-                    <Image
-                      src={imageUrl}
-                      alt={`${module.name} - Image ${idx + 1}`}
-                      fill
-                      className="object-cover group-hover:scale-105 transition duration-300"
-                    />
+                    <div className="relative w-full h-full overflow-hidden rounded-md">
+                      <Image
+                        src={imageUrl}
+                        alt={`${module.name} - Image ${idx + 1}`}
+                        fill
+                        className="object-contain"
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -271,10 +280,21 @@ export default function ModuleDetailPage({ params }: { params: { id: string } })
                 <dt className="text-sm font-medium text-gray-500">Module Name</dt>
                 <dd className="mt-1 text-sm text-gray-900">{module.name}</dd>
               </div>
-              {module.type && (
+              {module.types && module.types.length > 0 && (
                 <div>
-                  <dt className="text-sm font-medium text-gray-500">Type</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{module.type}</dd>
+                  <dt className="text-sm font-medium text-gray-500">Types</dt>
+                  <dd className="mt-1 text-sm text-gray-900">
+                    <div className="flex flex-wrap gap-1">
+                      {module.types.map((type) => (
+                        <span
+                          key={type}
+                          className="px-2 py-1 bg-primary-100 text-primary-700 rounded-full text-xs"
+                        >
+                          {type}
+                        </span>
+                      ))}
+                    </div>
+                  </dd>
                 </div>
               )}
               <div>

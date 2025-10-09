@@ -8,7 +8,7 @@ import { deleteImageKitFiles } from "@/lib/imagekit";
 const moduleSchema = z.object({
   manufacturer: z.string().min(1, "Manufacturer is required"),
   name: z.string().min(1, "Name is required"),
-  type: z.string().optional(),
+  types: z.array(z.string()).default([]),
   notes: z.string().optional(),
   images: z.array(z.string()).default([]),
 });

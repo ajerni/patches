@@ -7,7 +7,7 @@ interface Module {
   id: string;
   manufacturer: string;
   name: string;
-  type?: string;
+  types?: string[];
 }
 
 interface ModuleSelectorProps {
@@ -153,9 +153,9 @@ export function ModuleSelector({ selectedModuleIds, onModulesChange }: ModuleSel
                           <span className="text-gray-500">-</span>
                           <span className="text-gray-700 truncate">{module.name}</span>
                         </div>
-                        {module.type && (
+                        {module.types && module.types.length > 0 && (
                           <div className="text-xs text-gray-500 mt-0.5">
-                            {module.type}
+                            {module.types.join(', ')}
                           </div>
                         )}
                       </div>
