@@ -7,7 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Navbar } from "@/components/Navbar";
 import { Pagination } from "@/components/Pagination";
-import { Plus, Search, Music, Edit, Trash2, Boxes } from "lucide-react";
+import { Plus, Search, Music, Edit, Trash2, Boxes, Calendar, SortAsc, SortDesc } from "lucide-react";
 
 interface Module {
   id: string;
@@ -26,6 +26,8 @@ export default function ModulesPage() {
   const [modules, setModules] = useState<Module[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState<'date' | 'alphabetical'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(6);
 
@@ -71,16 +73,41 @@ export default function ModulesPage() {
     }
   };
 
-  const filteredModules = modules.filter((module) =>
-    module.manufacturer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    module.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    module.types?.some(type => type.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredModules = modules
+    .filter((module) =>
+      module.manufacturer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      module.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      module.types?.some(type => type.toLowerCase().includes(searchTerm.toLowerCase()))
+    )
+    .sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortBy) {
+        case 'date':
+          comparison = new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
+          break;
+        case 'alphabetical':
+          comparison = a.name.localeCompare(b.name);
+          break;
+      }
+      
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
 
-  // Reset to page 1 when search term changes
+  // Handle sort change
+  const handleSortChange = (newSortBy: 'date' | 'alphabetical') => {
+    if (sortBy === newSortBy) {
+      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(newSortBy);
+      setSortOrder('desc');
+    }
+  };
+
+  // Reset to page 1 when search term or sort changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [searchTerm, sortBy, sortOrder]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredModules.length / itemsPerPage);
@@ -125,18 +152,59 @@ export default function ModulesPage() {
           </p>
         </div>
 
-        {/* Actions Bar */}
-        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sm:gap-4 mb-6">
-          <div className="relative flex-1 w-full sm:max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search modules..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            />
+        {/* Search and Sort Controls */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* Search */}
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search by title, tags, creators..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+            
+            {/* Sort Controls */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleSortChange('date')}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition ${
+                  sortBy === 'date'
+                    ? 'bg-primary-50 border-primary-200 text-primary-700'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <Calendar className="h-4 w-4" />
+                <span>Date</span>
+                {sortBy === 'date' && (
+                  sortOrder === 'desc' ? <SortDesc className="h-4 w-4" /> : <SortAsc className="h-4 w-4" />
+                )}
+              </button>
+              
+              <button
+                onClick={() => handleSortChange('alphabetical')}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition ${
+                  sortBy === 'alphabetical'
+                    ? 'bg-primary-50 border-primary-200 text-primary-700'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <span>A-Z</span>
+                {sortBy === 'alphabetical' && (
+                  sortOrder === 'desc' ? <SortDesc className="h-4 w-4" /> : <SortAsc className="h-4 w-4" />
+                )}
+              </button>
+            </div>
           </div>
+        </div>
+
+        {/* Actions Bar */}
+        <div className="flex justify-end mb-6">
           <Link
             href="/modules/new"
             className="flex items-center justify-center space-x-2 bg-primary-600 text-white hover:bg-primary-700 px-6 py-2 rounded-lg font-medium transition"
@@ -145,18 +213,6 @@ export default function ModulesPage() {
             <span>Add Module</span>
           </Link>
         </div>
-
-        {/* Module Count */}
-        {modules.length > 0 && (
-          <div className="mb-6 text-sm text-gray-600">
-            Total modules: <span className="font-semibold">{modules.length}</span>
-            {searchTerm && (
-              <span className="ml-2">
-                (showing {filteredModules.length})
-              </span>
-            )}
-          </div>
-        )}
 
         {/* Modules List */}
         {filteredModules.length === 0 ? (
